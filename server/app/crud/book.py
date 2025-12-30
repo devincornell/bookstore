@@ -29,11 +29,19 @@ class BookCRUD:
             query = query.filter(
                 Book.title.ilike(search_filter) | 
                 Book.author.ilike(search_filter) |
-                Book.description.ilike(search_filter)
+                Book.description.ilike(search_filter) |
+                Book.genres.ilike(search_filter) |
+                Book.general_style.ilike(search_filter) |
+                Book.target_audience.ilike(search_filter) |
+                Book.similar_works.ilike(search_filter) |
+                Book.review_content.ilike(search_filter) |
+                Book.author_background.ilike(search_filter) |
+                Book.reception.ilike(search_filter)
             )
         
         if genre:
-            query = query.filter(Book.genre == genre)
+            # Search within comma-separated genres list
+            query = query.filter(Book.genres.ilike(f"%{genre}%"))
             
         if author:
             query = query.filter(Book.author.ilike(f"%{author}%"))
@@ -84,12 +92,19 @@ class BookCRUD:
         return db.query(Book).filter(Book.isbn == isbn).first()
     
     def search_books(self, db: Session, query: str, limit: int = 20) -> List[Book]:
-        """Search books by title, author, or description"""
+        """Search books by title, author, description, and all other text fields"""
         search_filter = f"%{query}%"
         return db.query(Book).filter(
             Book.title.ilike(search_filter) | 
             Book.author.ilike(search_filter) |
-            Book.description.ilike(search_filter)
+            Book.description.ilike(search_filter) |
+            Book.genres.ilike(search_filter) |
+            Book.general_style.ilike(search_filter) |
+            Book.target_audience.ilike(search_filter) |
+            Book.similar_works.ilike(search_filter) |
+            Book.review_content.ilike(search_filter) |
+            Book.author_background.ilike(search_filter) |
+            Book.reception.ilike(search_filter)
         ).limit(limit).all()
 
 
