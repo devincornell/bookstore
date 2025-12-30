@@ -1,35 +1,25 @@
 """
-Text generation functions using Vertex AI
+Text generation functions using Google GenAI
 """
-from google.cloud import aiplatform
-from vertexai.preview.generative_models import GenerativeModel, Part
+from google.genai import types
 from typing import Optional, Dict, Any, List
 import logging
-from app.ai.client import vertex_client
+from app.ai.client import genai_client
 
 logger = logging.getLogger(__name__)
 
 
 class TextGenerator:
-    """Text generation using Vertex AI Gemini models"""
+    """Text generation using Google GenAI models"""
     
-    def __init__(self, model_name: str = "gemini-1.5-flash"):
+    def __init__(self, model_name: str = "gemini-2.5-flash"):
         self.model_name = model_name
-        self._model = None
     
-    def _get_model(self):
-        """Get or initialize the generative model"""
-        if not vertex_client.is_available:
-            raise RuntimeError("Vertex AI not available")
-        
-        if self._model is None:
-            try:
-                self._model = GenerativeModel(self.model_name)
-            except Exception as e:
-                logger.error(f"Failed to initialize model {self.model_name}: {str(e)}")
-                raise
-        
-        return self._model
+    def _get_client(self):
+        """Get the GenAI client"""
+        if not genai_client.is_available:
+            raise RuntimeError("GenAI not available")
+        return genai_client.get_client()
     
     def generate_text(
         self, 
@@ -53,18 +43,19 @@ class TextGenerator:
             Generated text or None if failed
         """
         try:
-            model = self._get_model()
+            client = self._get_client()
             
-            generation_config = {
-                "max_output_tokens": max_output_tokens,
-                "temperature": temperature,
-                "top_p": top_p,
-                "top_k": top_k
-            }
+            config = types.GenerateContentConfig(
+                max_output_tokens=max_output_tokens,
+                temperature=temperature,
+                top_p=top_p,
+                top_k=top_k
+            )
             
-            response = model.generate_content(
-                prompt,
-                generation_config=generation_config
+            response = client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=config
             )
             
             return response.text
@@ -176,3 +167,7 @@ class TextGenerator:
 
 # Global text generator instance
 text_generator = TextGenerator()
+
+def get_book_text_generator() -> TextGenerator:
+    """Get the global text generator instance"""
+    return text_generator

@@ -1,10 +1,10 @@
 # Makefile for Bookstore FastAPI Server
 
 # Variables
-PYTHON = python3
-PIP = pip3
-UVICORN = uvicorn
-ALEMBIC = alembic
+PYTHON = ../.venv/bin/python
+PIP = ../.venv/bin/uv pip
+UVICORN = ../.venv/bin/uvicorn
+ALEMBIC = ../.venv/bin/alembic
 
 # Default target
 .DEFAULT_GOAL := help

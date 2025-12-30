@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.endpoints.books import router as books_router
-from app.api.endpoints.book_research import router as research_router
+from app.api.endpoints.book_research import router as research_router  # Re-enabled with google-genai
 from app.core.config import settings
 
 # Create FastAPI instance

@@ -1,17 +1,19 @@
 """
-Vertex AI client configuration and initialization
+Google GenAI client configuration and initialization
 """
-from google.cloud import aiplatform
+from google import genai
+from google.genai import types
 from google.auth.exceptions import DefaultCredentialsError
 from typing import Optional
 import logging
+import os
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-class VertexAIClient:
-    """Singleton client for Vertex AI operations"""
+class GenAIClient:
+    """Singleton client for Google GenAI operations"""
     
     _instance = None
     _initialized = False
@@ -27,50 +29,57 @@ class VertexAIClient:
             self.region = settings.GOOGLE_CLOUD_REGION
             self._client = None
             self._initialize_client()
-            VertexAIClient._initialized = True
+            GenAIClient._initialized = True
     
     def _initialize_client(self):
-        """Initialize Vertex AI client"""
+        """Initialize GenAI client"""
         try:
-            if not self.project_id:
-                logger.warning("GOOGLE_CLOUD_PROJECT not configured. Vertex AI features will be disabled.")
+            # Check for API key first
+            api_key = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
+            
+            if api_key:
+                # Use Gemini Developer API
+                self._client = genai.Client(api_key=api_key)
+                logger.info("GenAI initialized with API key (Gemini Developer API)")
+            elif self.project_id:
+                # Use Vertex AI
+                self._client = genai.Client(
+                    vertexai=True, 
+                    project=self.project_id, 
+                    location=self.region
+                )
+                logger.info(f"GenAI initialized with Vertex AI for project: {self.project_id}")
+            else:
+                logger.warning("No API key or project configured. GenAI features will be disabled.")
                 return
-            
-            # Initialize Vertex AI
-            aiplatform.init(
-                project=self.project_id,
-                location=self.region,
-                credentials=None  # Uses default credentials or GOOGLE_APPLICATION_CREDENTIALS
-            )
-            
-            logger.info(f"Vertex AI initialized successfully for project: {self.project_id}")
-            self._client = aiplatform
-            
+                
         except DefaultCredentialsError:
             logger.error(
                 "Google Cloud credentials not found. Please set up authentication:\n"
-                "1. Set GOOGLE_APPLICATION_CREDENTIALS environment variable\n"
-                "2. Or run 'gcloud auth application-default login'"
+                "1. Set GEMINI_API_KEY environment variable, OR\n"
+                "2. Set GOOGLE_CLOUD_PROJECT and authenticate with:\n"
+                "   - Set GOOGLE_APPLICATION_CREDENTIALS environment variable\n"
+                "   - Or run 'gcloud auth application-default login'"
             )
         except Exception as e:
-            logger.error(f"Failed to initialize Vertex AI: {str(e)}")
+            logger.error(f"Failed to initialize GenAI: {str(e)}")
     
     @property
     def is_available(self) -> bool:
-        """Check if Vertex AI is properly configured and available"""
-        return self._client is not None and self.project_id is not None
+        """Check if GenAI is properly configured and available"""
+        return self._client is not None
     
     def get_client(self):
-        """Get the Vertex AI client"""
+        """Get the GenAI client"""
         if not self.is_available:
             raise RuntimeError(
-                "Vertex AI not available. Please check your configuration:\n"
-                "1. Set GOOGLE_CLOUD_PROJECT environment variable\n"
-                "2. Set up authentication (GOOGLE_APPLICATION_CREDENTIALS or gcloud auth)\n"
-                "3. Ensure google-cloud-aiplatform is installed"
+                "GenAI not available. Please check your configuration:\n"
+                "1. Set GEMINI_API_KEY environment variable, OR\n"
+                "2. Set GOOGLE_CLOUD_PROJECT and authenticate with gcloud\n"
+                "3. Ensure google-genai is installed"
             )
         return self._client
 
 
 # Global client instance
-vertex_client = VertexAIClient()
+genai_client = GenAIClient()

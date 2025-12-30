@@ -1,36 +1,26 @@
 """
-Embedding functions using Vertex AI for semantic search and recommendations
+Embedding functions using Google GenAI for semantic search and recommendations
 """
-from google.cloud import aiplatform
-from vertexai.language_models import TextEmbeddingModel
+from google.genai import types
 from typing import List, Optional, Dict, Any
 import numpy as np
 import logging
-from app.ai.client import vertex_client
+from app.ai.client import genai_client
 
 logger = logging.getLogger(__name__)
 
 
 class EmbeddingGenerator:
-    """Generate embeddings using Vertex AI text embedding models"""
+    """Generate embeddings using Google GenAI embedding models"""
     
-    def __init__(self, model_name: str = "textembedding-gecko@003"):
+    def __init__(self, model_name: str = "gemini-embedding-001"):
         self.model_name = model_name
-        self._model = None
     
-    def _get_model(self):
-        """Get or initialize the embedding model"""
-        if not vertex_client.is_available:
-            raise RuntimeError("Vertex AI not available")
-        
-        if self._model is None:
-            try:
-                self._model = TextEmbeddingModel.from_pretrained(self.model_name)
-            except Exception as e:
-                logger.error(f"Failed to initialize embedding model {self.model_name}: {str(e)}")
-                raise
-        
-        return self._model
+    def _get_client(self):
+        """Get the GenAI client"""
+        if not genai_client.is_available:
+            raise RuntimeError("GenAI not available")
+        return genai_client.get_client()
     
     def generate_embeddings(self, texts: List[str]) -> Optional[List[List[float]]]:
         """
@@ -43,13 +33,16 @@ class EmbeddingGenerator:
             List of embedding vectors or None if failed
         """
         try:
-            model = self._get_model()
+            client = self._get_client()
             
-            # Generate embeddings
-            embeddings = model.get_embeddings(texts)
+            # Generate embeddings using the new API
+            response = client.models.embed_content(
+                model=self.model_name,
+                contents=texts
+            )
             
             # Extract the embedding values
-            embedding_vectors = [embedding.values for embedding in embeddings]
+            embedding_vectors = [embedding.values for embedding in response.embeddings]
             
             return embedding_vectors
             
@@ -210,3 +203,7 @@ class EmbeddingGenerator:
 
 # Global embedding generator instance
 embedding_generator = EmbeddingGenerator()
+
+def get_book_embeddings_service() -> EmbeddingGenerator:
+    """Get the global embedding generator instance"""
+    return embedding_generator
