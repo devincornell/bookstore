@@ -6,10 +6,39 @@ from google import genai
 from google.genai import types
 
 class BookResearchInfo(pydantic.BaseModel):
-    company_name: str = pydantic.Field(description="The full name of the company")
-    current_price: float = pydantic.Field(description="The current stock price")
-    currency: str = pydantic.Field(description="The currency symbol, e.g., USD, INR")
-    summary: str = pydantic.Field(description="A 1-sentence summary of recent news")
+    title: str = pydantic.Field(description="The full title of the book")
+    author: str = pydantic.Field(description="The author's name")
+    isbn: str = pydantic.Field(description="The ISBN number (10 or 13 digits)")
+    description: str = pydantic.Field(description="A description or summary of the book")
+    publication_year: int = pydantic.Field(description="The year the book was published")
+    
+    # Genres as comma-separated list
+    genres: str = pydantic.Field(description="Comma-separated list of genres")
+    
+    # Existing detailed fields
+    general_style: str = pydantic.Field(description="Writing style, narrative approach, and literary techniques")
+    target_audience: str = pydantic.Field(description="Age range, content appropriateness, and intended audience")
+    similar_works: str = pydantic.Field(description="Other books, articles, or works that are similar")
+    review_content: str = pydantic.Field(description="Common themes and content mentioned in reviews")
+    author_background: str = pydantic.Field(description="Author's fame, biography, credentials, and other works")
+    reception: str = pydantic.Field(description="Awards, ratings, bestseller lists, and critical reception")
+    
+    # New fields to help readers decide if they'd like the book
+    reading_difficulty: str = pydantic.Field(description="Reading level: easy, moderate, challenging, or academic")
+    emotional_tone: str = pydantic.Field(description="Overall emotional tone: dark, uplifting, melancholy, humorous, etc.")
+    pacing: str = pydantic.Field(description="Story pacing: slow burn, fast-paced, episodic, etc.")
+    major_themes: str = pydantic.Field(description="Main themes: love, betrayal, coming of age, survival, etc.")
+    content_warnings: str = pydantic.Field(description="Content warnings: violence, sexual content, trauma, etc.")
+    series_info: str = pydantic.Field(description="Series information: standalone, book number, part of universe, etc.")
+    page_count: int = pydantic.Field(description="Approximate number of pages")
+    narrative_pov: str = pydantic.Field(description="Narrative point of view: first person, third person limited, omniscient, etc.")
+    setting_time_place: str = pydantic.Field(description="Setting details: time period and location")
+    main_characters: str = pydantic.Field(description="Main character types, demographics, and personalities")
+    notable_quotes: str = pydantic.Field(description="Memorable lines that capture the book's essence")
+    reader_demographics: str = pydantic.Field(description="Typical reader demographics who enjoy this book")
+    frequently_compared_to: str = pydantic.Field(description="Books frequently compared to this one")
+    critical_consensus: str = pydantic.Field(description="What critics generally agree about the book")
+    discussion_points: str = pydantic.Field(description="Common topics for book clubs and discussions")
 
 @dataclasses.dataclass
 class BookResearchAIService:
@@ -18,13 +47,30 @@ class BookResearchAIService:
     search_prompt: str = (
         'I need you to do research on a book titled \"{title}\" by \"{author}\". '
         " For this book, search the web thoroughly and find the following information:"
-        "   + General genre or style"
-        "   + Aparent audience including age range type or ammont of explicit content"
-        "   + Other books and articles that may be similar"
-        "   + Content described frequently in reviews and write-ups for critics and regular users."
-        "   + Author fame and background"
-        "   + Reception: any awards that the book has won; average or median user star ratings on websites like kindle, Goodreads, or Barnes and noble; and any best selling lists that the book has appeared on."
-        " Make sure you provide ALL of this information - you can't miss a single point!"
+        "   + Basic Information: Full title, author name, ISBN, description/summary, publication year"
+        "   + Genres: Specific genres as a comma-separated list"
+        "   + Writing Style: General style, narrative approach, literary techniques"
+        "   + Target Audience: Age range, content appropriateness, intended audience"
+        "   + Similar Works: Other books, articles, or works that are similar"
+        "   + Review Content: Common themes and content mentioned in reviews"
+        "   + Author Background: Author's fame, biography, credentials, other works"
+        "   + Reception: Awards, ratings, bestseller lists, critical reception"
+        "   + Reading Experience: Reading difficulty level (easy/moderate/challenging/academic)"
+        "   + Emotional Tone: Overall emotional tone (dark, uplifting, melancholy, humorous, etc.)"
+        "   + Pacing: Story pacing (slow burn, fast-paced, episodic, etc.)"
+        "   + Major Themes: Main themes (love, betrayal, coming of age, survival, etc.)"
+        "   + Content Warnings: Any content warnings (violence, sexual content, trauma, etc.)"
+        "   + Series Information: Standalone or part of series, book number, universe info"
+        "   + Page Count: Approximate number of pages"
+        "   + Narrative POV: Point of view (first person, third person limited, omniscient, etc.)"
+        "   + Setting: Time period and place where the story occurs"
+        "   + Main Characters: Character types, demographics, personalities"
+        "   + Notable Quotes: Memorable lines that capture the book's essence"
+        "   + Reader Demographics: Who typically enjoys this book"
+        "   + Comparisons: Books this is frequently compared to"
+        "   + Critical Consensus: What critics generally agree about"
+        "   + Discussion Points: Common topics for book clubs and discussions"
+        " Make sure you provide ALL of this information comprehensively - you can't miss a single point!"
     )
     structure_model: str = "gemini-2.5-flash"
     structure_prompt: str = (
