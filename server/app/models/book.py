@@ -1,11 +1,14 @@
-from sqlalchemy import Column, String, Text, Integer, ForeignKey, JSON
+from sqlalchemy import Column, String, Text, Integer, ForeignKey, JSON, DateTime, func
 from sqlalchemy.orm import relationship
-from app.models.base import BaseModel
 
 
-class Book(BaseModel):
-    __tablename__ = "books"
+class BookInfo:
+    __tablename__ = "book_infos"
     
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
     # Basic book information (matches BookResearchInfo)
     title = Column(Text, nullable=False, index=True)
     author = Column(Text, nullable=False, index=True)
@@ -117,9 +120,13 @@ class Book(BaseModel):
         return f"<Book(title='{self.title}', author='{self.author}')>"
 
 
-class BookSource(BaseModel):
-    __tablename__ = "book_sources"
+class ResearchSource:
+    __tablename__ = "research_sources"
     
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
     # Foreign key to book
     book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
     
