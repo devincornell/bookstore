@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from app.database import get_db
 from app.ai.book_research import get_book_research_service
-from server.app.ai.research_service import BookResearchService, BookResearchOutput, BookResearchInfo
+from app.ai.research_service import BookResearchService, BookResearchOutput, BookResearchInfo
 from app.schemas.book import BookResponse
 from pydantic import BaseModel
 
@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
-research_service = BookResearchService.from_api_key(os.environ["LLM_API_KEY"])
+research_service = BookResearchService.from_api_key(os.environ["GOOGLE_API_KEY"])
 
 router = APIRouter()
 
@@ -72,32 +72,21 @@ async def research_book(
             detail=f"Research failed: {str(e)}"
         )
 
-@router.get("/quick")
+@router.get("/quick", response_model=BookResearchOutput)
 async def quick_book_lookup(
     title: str = Query(..., description="Book title to research"),
     author: Optional[str] = Query(None, description="Author name"),
-    provider: Optional[str] = Query("google", description="LLM provider: google, openai, anthropic"),
     db: Session = Depends(get_db)
 ):
     """
     Quick book research without saving to database - returns essential info only
-    """        
-    try:
-        research_service = get_book_research_service(provider=provider)
-        
-        # Do quick research
-        result = research_service.quick_research(
-            title=title, 
-            author=author or "Unknown Author"
-        )
-        
-        return result
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Quick research failed: {str(e)}"
-        )
+    """
+    research_output = research_service.research_book(
+        title=title,
+        author=author or "Unknown Author"
+    )
+    return research_output
+    
 
 @router.post("/provider")
 async def set_provider(
