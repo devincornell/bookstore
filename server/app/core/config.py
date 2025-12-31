@@ -1,6 +1,8 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
-
+import pathlib
+import typing
+import dataclasses
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://username:password@localhost/bookstore_db"
@@ -19,4 +21,21 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 
-settings = Settings()
+app_settings = Settings()
+
+@dataclasses.dataclass
+class VertexAPIConfig:
+    """Configuration class for Vertex AI services"""
+    project_id: str
+    location: str
+    credentials_path: pathlib.Path
+
+    @classmethod
+    def from_settings(cls, settings: Settings) -> typing.Self:
+        return cls(
+            project_id=settings.GOOGLE_CLOUD_PROJECT,
+            location=settings.GOOGLE_CLOUD_REGION,
+            credentials_path=pathlib.Path(settings.GOOGLE_APPLICATION_CREDENTIALS)
+        )
+
+vertex_config = VertexAPIConfig.from_settings(app_settings)
