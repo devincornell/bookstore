@@ -96,7 +96,7 @@ class BookResearchService:
         "- Summary of overall reception - was it well-received, controversial, etc.\n\n"
         
         "**CONTENT & READER INFORMATION:**\n"
-        "- Approximate page count (be specific, e.g., '350 pages')\n"
+        "- Approximate word AND page count (be specific, e.g., '350 pages', '90,000 words')\n"
         "- Emotional tone and mood (dark, uplifting, melancholy, humorous, suspenseful, etc.)\n"
         "- Content spiciness/heat level for romantic content (None, Mild, Moderate, Hot, Extra Hot)\n"
         "- Detailed content warnings (violence, sexual content, trauma, suicide, abuse, etc.)\n"
@@ -128,6 +128,7 @@ class BookResearchService:
         "If any information is unavailable or unclear, clearly state that in your response. "
         "Provide specific, factual details rather than vague generalizations. "
         "Make sure you provide ALL of this information comprehensively - you cannot miss any category!"
+        "You will be asked to reorganize this later, so don't forget to include everything!"
     )
     structure_model: str = "gemini-2.5-flash"
     structure_prompt: str = (
