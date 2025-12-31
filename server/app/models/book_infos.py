@@ -1,6 +1,8 @@
 import typing
-from sqlalchemy import Column, String, Text, Integer, ForeignKey, JSON, DateTime, func
-from sqlalchemy.orm import relationship
+import datetime
+from sqlalchemy import String, Text, Integer, ForeignKey, JSON, DateTime, func
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+from pydantic import ConfigDict
 
 from app.ai import BookResearchInfo
 from app.database import Base
@@ -9,59 +11,59 @@ class BookInfo(Base):
     __tablename__ = "book_infos"
     model_config = ConfigDict(from_attributes=True) # Tells Pydantic to read from ORM attributes
     
-    id = Column(Integer, primary_key=True, index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Basic book information (matches BookResearchInfo)
-    title = Column(Text, nullable=False, index=True)
-    author = Column(Text, nullable=False, index=True)
-    publication_year = Column(Integer)
-    isbn = Column(String(20), unique=True, index=True)  # Allow for longer ISBNs
+    title: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    author: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    publication_year: Mapped[int | None] = mapped_column(Integer)
+    isbn: Mapped[str | None] = mapped_column(String(20), unique=True, index=True)  # Allow for longer ISBNs
     
     # Series information
-    series_title = Column(Text)  # If part of series, else 'Standalone'
-    series_description = Column(Text)  # Brief description of the series
-    series_entry_number = Column(Text)  # Book's entry number in series
-    other_series_entries = Column(JSON)  # List of other books in series
+    series_title: Mapped[str | None] = mapped_column(Text)  # If part of series, else 'Standalone'
+    series_description: Mapped[str | None] = mapped_column(Text)  # Brief description of the series
+    series_entry_number: Mapped[str | None] = mapped_column(Text)  # Book's entry number in series
+    other_series_entries: Mapped[list[str] | None] = mapped_column(JSON)  # List of other books in series
     
     # Reception information  
-    awards = Column(JSON)  # List of awards won
-    ratings = Column(JSON)  # List of ratings from major sources
-    bestseller_lists = Column(JSON)  # List of bestseller lists appeared on
-    review_quotes = Column(JSON)  # Notable quotes from reviews
-    critical_consensus = Column(Text)  # What critics generally agree
-    reception_overview = Column(Text)  # Overall summary of reception
+    awards: Mapped[list[str] | None] = mapped_column(JSON)  # List of awards won
+    ratings: Mapped[list[str] | None] = mapped_column(JSON)  # List of ratings from major sources
+    bestseller_lists: Mapped[list[str] | None] = mapped_column(JSON)  # List of bestseller lists appeared on
+    review_quotes: Mapped[list[str] | None] = mapped_column(JSON)  # Notable quotes from reviews
+    critical_consensus: Mapped[str | None] = mapped_column(Text)  # What critics generally agree
+    reception_overview: Mapped[str | None] = mapped_column(Text)  # Overall summary of reception
     
     # Content information
-    page_count = Column(Integer)
-    word_count = Column(Integer)
-    description = Column(Text)  # Book summary/description
-    emotional_tone = Column(Text)  # Dark, uplifting, melancholy, etc.
-    spicy_rating = Column(Text)  # Content spiciness: None, Mild, Moderate, Hot, Extra Hot
-    content_warnings = Column(Text)  # Violence, sexual content, trauma, etc.
-    target_audience = Column(Text)  # Age range and intended audience
-    reader_demographics = Column(Text)  # Typical reader demographics
-    setting_time_place = Column(Text)  # Time period and location
+    page_count: Mapped[int | None] = mapped_column(Integer)
+    word_count: Mapped[int | None] = mapped_column(Integer)
+    description: Mapped[str | None] = mapped_column(Text)  # Book summary/description
+    emotional_tone: Mapped[str | None] = mapped_column(Text)  # Dark, uplifting, melancholy, etc.
+    spicy_rating: Mapped[str | None] = mapped_column(Text)  # Content spiciness: None, Mild, Moderate, Hot, Extra Hot
+    content_warnings: Mapped[str | None] = mapped_column(Text)  # Violence, sexual content, trauma, etc.
+    target_audience: Mapped[str | None] = mapped_column(Text)  # Age range and intended audience
+    reader_demographics: Mapped[str | None] = mapped_column(Text)  # Typical reader demographics
+    setting_time_place: Mapped[str | None] = mapped_column(Text)  # Time period and location
     
     # Narrative and writing style
-    general_style = Column(Text)  # Writing style and literary techniques
-    pacing = Column(Text)  # Slow burn, fast-paced, episodic, etc.
-    reading_difficulty = Column(Text)  # Easy, moderate, challenging, academic
-    narrative_pov = Column(Text)  # First person, third person limited, etc.
+    general_style: Mapped[str | None] = mapped_column(Text)  # Writing style and literary techniques
+    pacing: Mapped[str | None] = mapped_column(Text)  # Slow burn, fast-paced, episodic, etc.
+    reading_difficulty: Mapped[str | None] = mapped_column(Text)  # Easy, moderate, challenging, academic
+    narrative_pov: Mapped[str | None] = mapped_column(Text)  # First person, third person limited, etc.
     
     # Literary context
-    genres = Column(JSON)  # List of genres
-    similar_works = Column(JSON)  # List of similar works
-    frequently_compared_to = Column(JSON)  # Books frequently compared to
+    genres: Mapped[list[str] | None] = mapped_column(JSON)  # List of genres
+    similar_works: Mapped[list[str] | None] = mapped_column(JSON)  # List of similar works
+    frequently_compared_to: Mapped[list[str] | None] = mapped_column(JSON)  # Books frequently compared to
     
     # Author information
-    author_other_series = Column(JSON)  # Other series by author
-    author_other_works = Column(JSON)  # Other notable works by author  
-    author_background = Column(Text)  # Author biography and credentials
+    author_other_series: Mapped[list[str] | None] = mapped_column(JSON)  # Other series by author
+    author_other_works: Mapped[list[str] | None] = mapped_column(JSON)  # Other notable works by author  
+    author_background: Mapped[str | None] = mapped_column(Text)  # Author biography and credentials
     
     # Relationship to sources
-    sources = relationship("BookSource", back_populates="book", cascade="all, delete-orphan")
+    sources: Mapped[list["ResearchSource"]] = relationship(back_populates="book", cascade="all, delete-orphan")
 
     @classmethod
     def from_research_info(cls, info: BookResearchInfo) -> typing.Self:

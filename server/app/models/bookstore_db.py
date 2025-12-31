@@ -26,11 +26,11 @@ class BookStoreDB:
         self.db.flush()  # To get book_info.id
         
         # Add associated sources
-        for name,url in research_output.sources:
+        for source in research_output.sources:
             research_source = ResearchSource.from_name_url(
                 book_id=book_info.id, 
-                name=name, 
-                url=url
+                name=source['name'], 
+                url=source['url']
             )
             self.db.add(research_source)
         self.db.commit()

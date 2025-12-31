@@ -1,25 +1,26 @@
 import typing
-from sqlalchemy import Column, String, Text, Integer, ForeignKey, JSON, DateTime, func
-from sqlalchemy.orm import relationship
+import datetime
+from sqlalchemy import String, Text, Integer, ForeignKey, DateTime, func
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from app.ai import BookResearchSource
+from app.database import Base
 
-class ResearchSource:
+class ResearchSource(Base):
     __tablename__ = "research_sources"
     
-    id = Column(Integer, primary_key=True, index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Foreign key to book
-    book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
+    book_id: Mapped[int] = mapped_column(Integer, ForeignKey("book_infos.id"), nullable=False)
     
     # Source information
-    name = Column(Text, nullable=False)  # Source title/name
-    url = Column(Text, nullable=False)   # Source URL
+    name: Mapped[str] = mapped_column(Text, nullable=False)  # Source title/name
+    url: Mapped[str] = mapped_column(Text, nullable=False)   # Source URL
     
     # Relationship back to book
-    book = relationship("Book", back_populates="sources")
+    book: Mapped["BookInfo"] = relationship(back_populates="sources")
 
     @classmethod
     def from_name_url(cls, book_id: int, name: str, url: str) -> typing.Self:

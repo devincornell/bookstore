@@ -1,15 +1,15 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase
-from app.core.config import settings
+from app.core.config import app_settings
 import typing
 
 
 # Create SQLAlchemy engine
 engine = create_engine(
-    settings.DATABASE_URL,
+    app_settings.DATABASE_URL,
     pool_pre_ping=True,
-    echo=settings.DEBUG
+    echo=app_settings.DEBUG
 )
 
 # Create SessionLocal class
