@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import Optional, List
-from app.models.book import Book
-from app.schemas.book import BookCreate, BookUpdate
+from app.models.book import Book, BookSource
+from app.schemas.book import BookCreate, BookUpdate, BookSourceCreate
 import math
 
 
@@ -30,18 +30,20 @@ class BookCRUD:
                 Book.title.ilike(search_filter) | 
                 Book.author.ilike(search_filter) |
                 Book.description.ilike(search_filter) |
-                Book.genres.ilike(search_filter) |
                 Book.general_style.ilike(search_filter) |
                 Book.target_audience.ilike(search_filter) |
-                Book.similar_works.ilike(search_filter) |
-                Book.review_content.ilike(search_filter) |
                 Book.author_background.ilike(search_filter) |
-                Book.reception.ilike(search_filter)
+                Book.critical_consensus.ilike(search_filter) |
+                Book.reception_overview.ilike(search_filter) |
+                Book.emotional_tone.ilike(search_filter) |
+                Book.setting_time_place.ilike(search_filter) |
+                Book.content_warnings.ilike(search_filter) |
+                Book.series_title.ilike(search_filter)
             )
         
         if genre:
-            # Search within comma-separated genres list
-            query = query.filter(Book.genres.ilike(f"%{genre}%"))
+            # Search within JSON genres list
+            query = query.filter(Book.genres.contains([genre]))
             
         if author:
             query = query.filter(Book.author.ilike(f"%{author}%"))
@@ -58,6 +60,22 @@ class BookCRUD:
         """Create a new book"""
         db_book = Book(**book.dict())
         db.add(db_book)
+        db.commit()
+        db.refresh(db_book)
+        return db_book
+    
+    def create_book_with_sources(self, db: Session, book: BookCreate, sources: List[BookSourceCreate]) -> Book:
+        """Create a new book with sources"""
+        # Create book
+        db_book = Book(**book.dict())
+        db.add(db_book)
+        db.flush()  # Get the ID without committing
+        
+        # Create sources
+        for source in sources:
+            db_source = BookSource(book_id=db_book.id, **source.dict())
+            db.add(db_source)
+        
         db.commit()
         db.refresh(db_book)
         return db_book
@@ -98,14 +116,40 @@ class BookCRUD:
             Book.title.ilike(search_filter) | 
             Book.author.ilike(search_filter) |
             Book.description.ilike(search_filter) |
-            Book.genres.ilike(search_filter) |
             Book.general_style.ilike(search_filter) |
             Book.target_audience.ilike(search_filter) |
-            Book.similar_works.ilike(search_filter) |
-            Book.review_content.ilike(search_filter) |
             Book.author_background.ilike(search_filter) |
-            Book.reception.ilike(search_filter)
+            Book.critical_consensus.ilike(search_filter) |
+            Book.reception_overview.ilike(search_filter) |
+            Book.emotional_tone.ilike(search_filter) |
+            Book.setting_time_place.ilike(search_filter) |
+            Book.content_warnings.ilike(search_filter) |
+            Book.series_title.ilike(search_filter)
         ).limit(limit).all()
+    
+    # Source-specific methods
+    def add_book_sources(self, db: Session, book_id: int, sources: List[BookSourceCreate]) -> List[BookSource]:
+        """Add sources to an existing book"""
+        db_sources = []
+        for source in sources:
+            db_source = BookSource(book_id=book_id, **source.dict())
+            db.add(db_source)
+            db_sources.append(db_source)
+        
+        db.commit()
+        for source in db_sources:
+            db.refresh(source)
+        return db_sources
+    
+    def get_book_sources(self, db: Session, book_id: int) -> List[BookSource]:
+        """Get all sources for a book"""
+        return db.query(BookSource).filter(BookSource.book_id == book_id).all()
+    
+    def delete_book_sources(self, db: Session, book_id: int) -> bool:
+        """Delete all sources for a book"""
+        deleted_count = db.query(BookSource).filter(BookSource.book_id == book_id).delete()
+        db.commit()
+        return deleted_count > 0
 
 
 # Create instance to be used in endpoints

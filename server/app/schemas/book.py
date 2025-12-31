@@ -3,41 +3,74 @@ from typing import Optional, List
 from datetime import datetime
 
 
-# Base schema
+# Schema for book sources
+class BookSourceBase(BaseModel):
+    name: str
+    url: str
+
+
+class BookSourceCreate(BookSourceBase):
+    pass
+
+
+class BookSourceResponse(BookSourceBase):
+    id: int
+    book_id: int
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+# Base schema for books - matches BookResearchInfo structure
 class BookBase(BaseModel):
+    # Basic information
     title: str
     author: str
-    isbn: Optional[str] = None
-    description: Optional[str] = None
     publication_year: Optional[int] = None
+    isbn: Optional[str] = None
     
-    # New genre field - comma-separated list
-    genres: Optional[str] = None  # "Science Fiction, Space Opera, Adventure"
+    # Series information
+    series_title: Optional[str] = None
+    series_description: Optional[str] = None
+    series_entry_number: Optional[str] = None
+    other_series_entries: Optional[List[str]] = None
     
-    # Existing detailed fields
-    general_style: Optional[str] = None
-    target_audience: Optional[str] = None
-    similar_works: Optional[str] = None
-    review_content: Optional[str] = None
-    author_background: Optional[str] = None
-    reception: Optional[str] = None
-    
-    # New reader-focused fields
-    reading_difficulty: Optional[str] = None
-    emotional_tone: Optional[str] = None
-    pacing: Optional[str] = None
-    major_themes: Optional[str] = None
-    content_warnings: Optional[str] = None
-    series_info: Optional[str] = None
-    page_count: Optional[int] = None
-    narrative_pov: Optional[str] = None
-    setting_time_place: Optional[str] = None
-    main_characters: Optional[str] = None
-    notable_quotes: Optional[str] = None
-    reader_demographics: Optional[str] = None
-    frequently_compared_to: Optional[str] = None
+    # Reception
+    awards: Optional[List[str]] = None
+    ratings: Optional[List[str]] = None
+    bestseller_lists: Optional[List[str]] = None
+    review_quotes: Optional[List[str]] = None
     critical_consensus: Optional[str] = None
-    discussion_points: Optional[str] = None
+    reception_overview: Optional[str] = None
+    
+    # Content
+    page_count: Optional[int] = None
+    word_count: Optional[int] = None
+    description: Optional[str] = None
+    emotional_tone: Optional[str] = None
+    spicy_rating: Optional[str] = None
+    content_warnings: Optional[str] = None
+    target_audience: Optional[str] = None
+    reader_demographics: Optional[str] = None
+    setting_time_place: Optional[str] = None
+    
+    # Narrative and writing style
+    general_style: Optional[str] = None
+    pacing: Optional[str] = None
+    reading_difficulty: Optional[str] = None
+    narrative_pov: Optional[str] = None
+    
+    # Literary context
+    genres: Optional[List[str]] = None
+    similar_works: Optional[List[str]] = None
+    frequently_compared_to: Optional[List[str]] = None
+    
+    # Author information
+    author_other_series: Optional[List[str]] = None
+    author_other_works: Optional[List[str]] = None
+    author_background: Optional[str] = None
     
     @validator('publication_year')
     def publication_year_reasonable(cls, v):
@@ -53,33 +86,52 @@ class BookCreate(BookBase):
 
 # Schema for updating a book
 class BookUpdate(BaseModel):
+    # Basic information
     title: Optional[str] = None
     author: Optional[str] = None
-    isbn: Optional[str] = None
-    description: Optional[str] = None
     publication_year: Optional[int] = None
-    genres: Optional[str] = None
-    general_style: Optional[str] = None
-    target_audience: Optional[str] = None
-    similar_works: Optional[str] = None
-    review_content: Optional[str] = None
-    author_background: Optional[str] = None
-    reception: Optional[str] = None
-    reading_difficulty: Optional[str] = None
-    emotional_tone: Optional[str] = None
-    pacing: Optional[str] = None
-    major_themes: Optional[str] = None
-    content_warnings: Optional[str] = None
-    series_info: Optional[str] = None
-    page_count: Optional[int] = None
-    narrative_pov: Optional[str] = None
-    setting_time_place: Optional[str] = None
-    main_characters: Optional[str] = None
-    notable_quotes: Optional[str] = None
-    reader_demographics: Optional[str] = None
-    frequently_compared_to: Optional[str] = None
+    isbn: Optional[str] = None
+    
+    # Series information
+    series_title: Optional[str] = None
+    series_description: Optional[str] = None
+    series_entry_number: Optional[str] = None
+    other_series_entries: Optional[List[str]] = None
+    
+    # Reception
+    awards: Optional[List[str]] = None
+    ratings: Optional[List[str]] = None
+    bestseller_lists: Optional[List[str]] = None
+    review_quotes: Optional[List[str]] = None
     critical_consensus: Optional[str] = None
-    discussion_points: Optional[str] = None
+    reception_overview: Optional[str] = None
+    
+    # Content
+    page_count: Optional[int] = None
+    word_count: Optional[int] = None
+    description: Optional[str] = None
+    emotional_tone: Optional[str] = None
+    spicy_rating: Optional[str] = None
+    content_warnings: Optional[str] = None
+    target_audience: Optional[str] = None
+    reader_demographics: Optional[str] = None
+    setting_time_place: Optional[str] = None
+    
+    # Narrative and writing style
+    general_style: Optional[str] = None
+    pacing: Optional[str] = None
+    reading_difficulty: Optional[str] = None
+    narrative_pov: Optional[str] = None
+    
+    # Literary context
+    genres: Optional[List[str]] = None
+    similar_works: Optional[List[str]] = None
+    frequently_compared_to: Optional[List[str]] = None
+    
+    # Author information
+    author_other_series: Optional[List[str]] = None
+    author_other_works: Optional[List[str]] = None
+    author_background: Optional[str] = None
     
     @validator('publication_year')
     def publication_year_reasonable(cls, v):
@@ -93,21 +145,10 @@ class BookResponse(BookBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    sources: List[BookSourceResponse] = []
     
     class Config:
         from_attributes = True
-
-
-# Helper schema for working with genre lists
-class BookWithGenreList(BookResponse):
-    """Book response with genres parsed as a list"""
-    genre_list: List[str] = []
-    
-    @validator('genre_list', pre=True, always=True)
-    def parse_genres(cls, v, values):
-        if 'genres' in values and values['genres']:
-            return [genre.strip() for genre in values['genres'].split(',') if genre.strip()]
-        return []
 
 
 # Schema for book list with pagination
