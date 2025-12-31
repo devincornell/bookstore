@@ -122,9 +122,10 @@ class BookResearchService:
                 tools=[types.Tool(google_search=types.GoogleSearch())]
             )
         )
-        return response.parsed
+        return response.parsed, self._get_unique_sources(response=response)
     
-    def _get_unique_sources(self, response: types.GenerateContentResponse) -> list[tuple[str, str]]:
+    @staticmethod
+    def _get_unique_sources(response: types.GenerateContentResponse) -> list[tuple[str, str]]:
         """Extract unique source URLs from grounding metadata"""
         metadata = response.candidates[0].grounding_metadata
         if metadata is None:
