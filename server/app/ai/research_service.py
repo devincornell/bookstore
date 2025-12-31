@@ -145,10 +145,7 @@ class BookResearchService:
     def research_book(self, title: str, author: str|None) -> BookResearchOutput:
         """Perform comprehensive research on a book and return structured info"""
         research_output, sources = self._search_book_info(title=title, author=author)
-        print(research_output)
-        print(sources)
         structured_info = self._structure_book_info(research_output=research_output)
-        print(structured_info)
         return BookResearchOutput(
             info=structured_info,
             sources=sources,
