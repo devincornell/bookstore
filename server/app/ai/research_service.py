@@ -4,6 +4,7 @@ from importlib.metadata import metadata
 import pydantic
 from google import genai
 from google.genai import types
+from .base_client_service import BaseClientService
 
 
 class BookResearchOutput(pydantic.BaseModel):
@@ -61,8 +62,7 @@ class BookResearchInfo(pydantic.BaseModel):
     
 
 @dataclasses.dataclass
-class BookResearchService:
-    client: genai.Client
+class BookResearchService(BaseClientService):
     search_model: str = "gemini-2.5-flash"
     search_prompt: str = (
         'I need you to do comprehensive research on a book titled \"{title}\" by \"{author}\". '
@@ -137,10 +137,10 @@ class BookResearchService:
     )
 
     @classmethod
-    def from_api_key(cls, api_key: str) -> BookResearchService:
+    def from_api_key(cls, api_key: str, **kwargs) -> BookResearchService:
         """Create BookAIService instance from API key"""
         client = genai.Client(api_key=api_key)
-        return cls(client=client)
+        return cls(client=client, **kwargs)
     
     def research_book(self, title: str, author: str|None) -> BookResearchOutput:
         """Perform comprehensive research on a book and return structured info"""
