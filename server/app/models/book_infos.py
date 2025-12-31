@@ -3,9 +3,11 @@ from sqlalchemy import Column, String, Text, Integer, ForeignKey, JSON, DateTime
 from sqlalchemy.orm import relationship
 
 from app.ai import BookResearchInfo
+from app.database import Base
 
-class BookInfo:
+class BookInfo(Base):
     __tablename__ = "book_infos"
+    model_config = ConfigDict(from_attributes=True) # Tells Pydantic to read from ORM attributes
     
     id = Column(Integer, primary_key=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
