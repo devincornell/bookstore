@@ -5,6 +5,13 @@ import pydantic
 from google import genai
 from google.genai import types
 
+
+class BookResearchOutput(pydantic.BaseModel):
+    info: BookResearchInfo = pydantic.Field(description="Comprehensive researched information about the book")
+    sources: list[tuple[str, str]] = pydantic.Field(description="List of unique source URLs and their titles used in the research")
+    provided_title: str = pydantic.Field(description="The title of the book as provided in the research request")
+    provided_author: str|None = pydantic.Field(description="The author of the book as provided in the research request")
+
 class BookResearchInfo(pydantic.BaseModel):
     title: str = pydantic.Field(description="The full title of the book")
     author: str = pydantic.Field(description="The author's name")
@@ -41,7 +48,7 @@ class BookResearchInfo(pydantic.BaseModel):
     discussion_points: str = pydantic.Field(description="Common topics for book clubs and discussions")
 
 @dataclasses.dataclass
-class BookResearchAIService:
+class BookResearchService:
     client: genai.Client
     search_model: str = "gemini-2.5-flash"
     search_prompt: str = (
@@ -79,12 +86,23 @@ class BookResearchAIService:
     )
 
     @classmethod
-    def from_api_key(cls, api_key: str) -> BookResearchInfo:
+    def from_api_key(cls, api_key: str) -> BookResearchService:
         """Create BookAIService instance from API key"""
         client = genai.Client(api_key=api_key)
         return cls(client=client)
     
-    def structure_book_info(self, research_output: str) -> BookResearchInfo:
+    def research_book(self, title: str, author: str|None) -> BookResearchOutput:
+        """Perform comprehensive research on a book and return structured info"""
+        research_output, sources = self._search_book_info(title=title, author=author)
+        structured_info = self._structure_book_info(research_output=research_output)
+        return BookResearchOutput(
+            info=structured_info,
+            sources=sources,
+            provided_title=title,
+            provided_author=author
+        )
+    
+    def _structure_book_info(self, research_output: str) -> BookResearchInfo:
         """Structure the research output into BookResearchInfo dataclass"""
         structure_response = self.client.models.generate_content(
             model=self.structure_model,
@@ -95,7 +113,7 @@ class BookResearchAIService:
             )
         )
 
-    def search_book_info(self, title: str, author: str|None) -> tuple[str, list[tuple[str, str]]]:
+    def _search_book_info(self, title: str, author: str|None) -> tuple[str, list[tuple[str, str]]]:
         """Search for book information using Google GenAI"""
         response = self.client.models.generate_content(
             model=self.search_model,
