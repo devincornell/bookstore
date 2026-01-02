@@ -11,15 +11,17 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
-from app.core import settings
+from app.core.config import app_settings
 from app.database import get_db
+from app.models import BookStoreDB
 from app.ai import (
     BookResearchService, 
     BookResearchOutput, 
     BookResearchInfo
 )
 
-research_service = BookResearchService.from_api_key(os.environ["GOOGLE_API_KEY"])
+research_service = BookResearchService.from_api_key(app_settings.GOOGLE_API_KEY)
+bookstore_db = BookStoreDB.from_orm_session(db=next(get_db()))
 
 router = APIRouter()
 
@@ -28,17 +30,21 @@ class BookResearchRequest(BaseModel):
     author: Optional[str] = Field(None, description="Author name")
     save_to_database: bool = Field(False, description="Whether to save the research result to the database")
 
-
-@router.post("/", response_model=BookResearchOutput)
-async def research_book(
+class BookResearchResponse(BaseModel):
+    book_infos: list[BookResearchInfo]
+    
+@router.post("/retrieve", response_model=BookResearchResponse)
+async def research_retrieve(
     request: BookResearchRequest,
     db: Session = Depends(get_db)
-) -> BookResearchOutput:
+) -> BookResearchResponse:
     research_output = research_service.research_book(
         title=request.title,
         author=request.author,
     )
-    return research_output
+    bookstore_db.add_book_research(research_output)
+
+    return BookResearchResponse(book_infos=[])
 
     try:
         

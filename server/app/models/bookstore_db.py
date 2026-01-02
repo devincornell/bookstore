@@ -18,6 +18,10 @@ class BookStoreDB:
     def from_orm_session(cls, db: Session) -> typing.Self:
         return cls(db=db)
     
+    def get_book_researches(self) -> List[BookResearchInfo]:
+        '''Get all book research records from the database.'''
+        return [book_info.to_research_info() for book_info in self.db.query(BookInfo).all()]
+    
     def add_book_research(self, research_output: BookResearchOutput) -> BookInfo:
         '''Add a book and its research sources to the database.        
         '''
@@ -34,6 +38,8 @@ class BookStoreDB:
             )
             self.db.add(research_source)
         self.db.commit()
+        self.db.flush()
+        self.db.refresh(book_info)
         return book_info
     
     def add_book_info(self, book_info: BookInfo) -> BookInfo:

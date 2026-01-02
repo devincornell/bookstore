@@ -1,15 +1,14 @@
 import typing
 import datetime
 from sqlalchemy import String, Text, Integer, ForeignKey, JSON, DateTime, func
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.orm import relationship, Mapped, mapped_column, MappedAsDataclass
 from pydantic import ConfigDict
 
 from app.ai import BookResearchInfo
 from app.database import Base
 
-class BookInfo(Base):
+class BookInfo(MappedAsDataclass, Base):
     __tablename__ = "book_infos"
-    model_config = ConfigDict(from_attributes=True) # Tells Pydantic to read from ORM attributes
     
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -104,12 +103,47 @@ class BookInfo(Base):
             author_background=info.author_background
         )
     
+    def to_research_info(self) -> BookResearchInfo:
+        '''Convert BookInfo instance back to BookResearchInfo data.'''
+        return BookResearchInfo(
+            title=self.title,
+            author=self.author,
+            publication_year=self.publication_year,
+            isbn=self.isbn,
+            series_title=self.series_title,
+            series_description=self.series_description,
+            series_entry_number=self.series_entry_number,
+            other_series_entries=self.other_series_entries,
+            awards=self.awards,
+            ratings=self.ratings,
+            bestseller_lists=self.bestseller_lists,
+            review_quotes=self.review_quotes,
+            critical_consensus=self.critical_consensus,
+            reception_overview=self.reception_overview,
+            page_count=self.page_count,
+            word_count=self.word_count,
+            description=self.description,
+            emotional_tone=self.emotional_tone,
+            spicy_rating=self.spicy_rating,
+            content_warnings=self.content_warnings,
+            target_audience=self.target_audience,
+            reader_demographics=self.reader_demographics,
+            setting_time_place=self.setting_time_place,
+            general_style=self.general_style,
+            pacing=self.pacing,
+            reading_difficulty=self.reading_difficulty,
+            narrative_pov=self.narrative_pov,
+            genres=self.genres,
+            similar_works=self.similar_works,
+            frequently_compared_to=self.frequently_compared_to,
+            author_other_series=self.author_other_series,
+            author_other_works=self.author_other_works,
+            author_background=self.author_background
+        )
+
     def get_textual_representation(self) -> str:
         '''Format all object properties into human-readable string so that it may be used in an LLM.'''
         return format_book_info_as_text(self)
-
-    def __repr__(self):
-        return f"<Book(title='{self.title}', author='{self.author}')>"
     
 
 
