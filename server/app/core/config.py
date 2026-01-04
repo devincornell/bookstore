@@ -1,10 +1,12 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 import pathlib
 import typing
 import dataclasses
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env")
+    
     DATABASE_URL: str = "postgresql://username:password@localhost/bookstore_db"
     SECRET_KEY: str = "your-secret-key-here"
     DEBUG: bool = True
@@ -16,9 +18,6 @@ class Settings(BaseSettings):
     GOOGLE_CLOUD_REGION: str = "us-central1"
     GOOGLE_APPLICATION_CREDENTIALS: str
     GOOGLE_API_KEY: str
-    
-    class Config:
-        env_file = ".env"
 
 
 app_settings = Settings()
