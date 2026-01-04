@@ -62,7 +62,11 @@ class BookResearchInfo(pydantic.BaseModel):
     # author
     author_other_series: list[str] = pydantic.Field(description="Other series written by the author")
     author_other_works: list[str] = pydantic.Field(description="Other notable works by the author")
-    author_background: str = pydantic.Field(description="Author's biography, credentials, and other relevant background information")    
+    author_background: str = pydantic.Field(description="Author's biography, credentials, and other relevant background information")
+
+    def as_string(self) -> str:
+        """Return a string representation of the book research info"""
+        return self.model_dump_json(indent=2)
     
 
 @dataclasses.dataclass

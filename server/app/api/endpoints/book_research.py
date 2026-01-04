@@ -19,10 +19,13 @@ from app.mongo_models import BookResearch, init_beanie_models
 from app.ai import (
     BookResearchService, 
     BookResearchOutput, 
-    BookResearchInfo
+    BookResearchInfo,
+    BookRecommendService,
+    BookRecommendOutput,
 )
 
 research_service = BookResearchService.from_api_key(app_settings.GOOGLE_API_KEY)
+recommend_service = BookRecommendService.from_api_key(app_settings.GOOGLE_API_KEY)
 
 router = APIRouter()
 
@@ -79,7 +82,6 @@ async def research(
 class BookListResponse(BaseModel):
     books: list[BookResearchResponse] = pydantic.Field(description="List of researched books")
 
-
 @router.get("/list_books", response_model=BookListResponse)
 async def list_books(
 ) -> BookListResponse:
@@ -87,6 +89,17 @@ async def list_books(
     books = await BookResearch.find_all().to_list()
     return BookListResponse(
         books=[BookResearchResponse.from_mongo_model(book) for book in books]
+    )
+
+@router.get("/recommend_books", response_model=BookRecommendOutput)
+async def recommend_books(
+    recommend_criteria: Optional[str] = Query(None, description="Criteria for recommending books")
+) -> BookRecommendOutput:
+    await init_beanie_models()
+    books = await BookResearch.find_all().to_list()
+    return recommend_service.recommend_books(
+        recommend_criteria=recommend_criteria,
+        book_info=books
     )
 
 @router.delete("/delete_book/{book_id}")

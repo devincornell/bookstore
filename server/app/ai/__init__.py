@@ -7,3 +7,9 @@ from .research_service import (
 from .embedding_service import (
     EmbeddingService,
 )
+
+from .recommend_service import (
+    BookRecommendService,
+    BookRecommendOutput,
+    RecommendedBook,
+)
