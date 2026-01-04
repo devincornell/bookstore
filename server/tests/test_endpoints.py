@@ -87,6 +87,44 @@ def test_get_extract_books():
     print("-" * 50)
 
 
+def test_post_research_and_insert_async():
+    """Test the POST /research_and_insert_async endpoint"""
+    print("Testing POST /research_and_insert_async endpoint...")
+    
+    url = f"{BASE_URL}/research/research_and_insert_async"
+    payload = {
+        'books': [
+            {
+                "title": "The man who mistook his wife for a hat.",
+                "other_info": None,
+            },
+            {
+                "title": "Thinking, Fast and Slow",
+                "other_info": "Daniel Kahneman",
+            },
+        ]
+    }
+    
+    try:
+        response = requests.post(url, json=payload)
+        print(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 200:
+            print("✅ POST /research_and_insert - SUCCESS")
+            result = response.json()
+            print(f"Response: {json.dumps(result, indent=2)}")
+        else:
+            print("❌ POST /research_and_insert - FAILED")
+            print(f"Error: {response.text}")
+            
+    except requests.exceptions.RequestException as e:
+        print(f"❌ POST /research_and_insert - CONNECTION ERROR: {e}")
+    
+    print("-" * 50)
+
+
+
+
 def test_post_research_and_insert():
     """Test the POST /research_and_insert endpoint"""
     print("Testing POST /research_and_insert endpoint...")
@@ -145,9 +183,10 @@ def main():
     
     # Test both endpoints
     #test_get_research()
-    test_get_extract_books()
+    #test_get_extract_books()
     #test_get_list_books()
     #test_post_research_and_insert()
+    test_post_research_and_insert_async()
     
     print("Test script completed!")
 

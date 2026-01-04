@@ -3,8 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 #from app.api.endpoints.books import router as books_router
-from app.api.endpoints.book_research import router as research_router  # Re-enabled with google-genai
+
+
 from app.core.config import app_settings
+from app.api.endpoints.book_research import router as research_router
+from app.api.endpoints.extract import router as extract_router
 
 # Create FastAPI instance
 app = FastAPI(
@@ -38,6 +41,12 @@ app.include_router(
     research_router,
     prefix="/research",
     tags=["book-research"]
+)
+
+app.include_router(
+    extract_router,
+    prefix="/extract",
+    tags=["book-extract"]
 )
 
 @app.get("/")

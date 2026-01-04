@@ -2,10 +2,10 @@
 API endpoints for book research functionality using pydantic-ai
 """
 import typing
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, BackgroundTasks
 import pydantic
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
 
 from dotenv import load_dotenv
@@ -15,11 +15,10 @@ load_dotenv()
 from app.core.config import app_settings
 #from app.database import get_db
 #from app.models import BookStoreDB
-from app.mongo_models import BookResearch, init_beanie_models
+from app.mongo_models import BookResearch, init_beanie_models, ResearchTask
 from app.ai import (
     BookResearchService, 
     BookResearchOutput, 
-    BookResearchInfo,
     BookRecommendService,
     BookRecommendOutput,
     BookExtractionService,
@@ -28,13 +27,9 @@ from app.ai import (
 
 research_service = BookResearchService.from_api_key(app_settings.GOOGLE_API_KEY)
 recommend_service = BookRecommendService.from_api_key(app_settings.GOOGLE_API_KEY)
-extraction_service = BookExtractionService.from_api_key(app_settings.GOOGLE_API_KEY)
 router = APIRouter()
 
-class BookResearchRequest(BaseModel):
-    title: str = Field(..., description="Book title to research")
-    other_info: Optional[str] = Field(None, description="Other information about the book that may be helpful for researching")
-    #save_to_database: bool = Field(False, description="Whether to save the research result to the database")
+
 
 class BookResearchResponse(BaseModel):
     id: str = pydantic.Field(description="The MongoDB document ID")
@@ -50,12 +45,58 @@ class BookResearchResponse(BaseModel):
             provided_other_info=model.provided_other_info,
             research_output=model.research_output,
         )
-    
-@router.post("/research_and_insert", response_model=BookResearchResponse)
+
+
+class SingleBookResearchRequest(BaseModel):
+    title: str = Field(..., description="Book title to research")
+    other_info: Optional[str] = Field(None, description="Other information about the book that may be helpful for researching")
+
+class MultiBookResearchRequest(BaseModel):
+    books: List[SingleBookResearchRequest] = Field(description="List of books to research")
+
+@router.post("/research_and_insert_async", response_model=list[ResearchTask])
+async def research_book_async(
+    request: MultiBookResearchRequest,
+    background_tasks: BackgroundTasks
+) -> list[ResearchTask]:
+    """Start asynchronous book research and return immediately with task ID"""
+    await init_beanie_models()
+    tasks = []
+    for brq in request.books:
+        task = await ResearchTask.insert_research_task(
+            title=brq.title,
+            other_info=brq.other_info
+        )
+        tasks.append(task)
+        background_tasks.add_task(
+            background_research,
+            brq,
+            task,
+        )
+    return tasks
+
+async def background_research(
+    research_request: SingleBookResearchRequest,
+    task: ResearchTask,
+) -> None:
+    """Background task to research a single book and save to database"""
+    research_output = await research_service.research_book(
+        title=research_request.title,
+        other_info=research_request.other_info,
+    )
+    await init_beanie_models()
+    await BookResearch.insert_book(
+        provided_title=research_request.title,
+        provided_other_info=research_request.other_info,
+        research_output=research_output,
+    )
+    return await task.delete()
+
+@router.post("/research_and_insert", response_model=BookResearch)
 async def research_and_insert(
-    request: BookResearchRequest,
-) -> BookResearchResponse:
-    research_output = research_service.research_book(
+    request: SingleBookResearchRequest,
+) -> BookResearch:
+    research_output = await research_service.research_book(
         title=request.title,
         other_info=request.other_info,
     )
@@ -65,7 +106,7 @@ async def research_and_insert(
         provided_other_info=request.other_info,
         research_output=research_output,
     )
-    return BookResearchResponse.from_mongo_model(new_book)
+    return new_book#BookResearchResponse.from_mongo_model(new_book)
 
 @router.get("/research", response_model=BookResearchOutput)
 async def research(
@@ -73,19 +114,51 @@ async def research(
     other_info: Optional[str] = Query(None, description="Other information about the book"),
 ):
     '''Perform book research without saving to database.'''
-    research_output = research_service.research_book(
+    research_output = await research_service.research_book(
         title=title,
         other_info=other_info,
     )
     return research_output
-    
+
+class ResearchTasks(BaseModel):
+    tasks: list[ResearchTask] = pydantic.Field(description="List of research tasks")
+
+@router.get("/tasks/list", response_model=ResearchTasks)
+async def research_tasks_list(
+) -> ResearchTasks:
+    await init_beanie_models()
+    tasks = await ResearchTask.find_all().to_list()
+    return ResearchTasks(
+        tasks = tasks,
+    )
+
+@router.get("/tasks/clear")
+async def research_tasks_clear(
+) -> bool:
+    await init_beanie_models()
+    tasks = await ResearchTask.delete_all()
+    return True
+
+
+
+
+@router.get("/books/recommend", response_model=BookRecommendOutput)
+async def books_recommend(
+    recommend_criteria: Optional[str] = Query(None, description="Criteria for recommending books")
+) -> BookRecommendOutput:
+    await init_beanie_models()
+    books = await BookResearch.find_all().to_list()
+    return await recommend_service.recommend_books(
+        recommend_criteria=recommend_criteria,
+        book_info=[br.research_output.info for br in books],
+    )
 
 
 class BookListResponse(BaseModel):
     books: list[BookResearchResponse] = pydantic.Field(description="List of researched books")
 
-@router.get("/list_books", response_model=BookListResponse)
-async def list_books(
+@router.get("/books/list", response_model=BookListResponse)
+async def books_list(
 ) -> BookListResponse:
     await init_beanie_models()
     books = await BookResearch.find_all().to_list()
@@ -93,19 +166,8 @@ async def list_books(
         books=[BookResearchResponse.from_mongo_model(book) for book in books]
     )
 
-@router.get("/recommend_books", response_model=BookRecommendOutput)
-async def recommend_books(
-    recommend_criteria: Optional[str] = Query(None, description="Criteria for recommending books")
-) -> BookRecommendOutput:
-    await init_beanie_models()
-    books = await BookResearch.find_all().to_list()
-    return recommend_service.recommend_books(
-        recommend_criteria=recommend_criteria,
-        book_info=[br.research_output.info for br in books],
-    )
-
-@router.delete("/delete_book/{book_id}")
-async def delete_book(
+@router.delete("/books/delete/{book_id}")
+async def books_delete(
     book_id: str
 ):
     """Delete a book by its MongoDB document ID."""
@@ -119,40 +181,3 @@ async def delete_book(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error deleting book: {str(e)}")
 
-@router.get("/extract_books", response_model=BookExtractionOutput)
-async def extract_books(
-    book_list_unstructured: str = Query(..., description="Unstructured list of books + metadata to extract")
-) -> BookExtractionOutput:
-    return extraction_service.extract_books(
-        book_list_unstructured=book_list_unstructured,
-    )
-
-@router.post("/extract_books_from_image", response_model=BookExtractionOutput)
-async def extract_books_from_image(
-    image: UploadFile = File(..., description="Image file containing book information (covers, lists, etc.)")
-) -> BookExtractionOutput:
-    """Extract book information from an uploaded image."""
-    # Validate file type
-    allowed_types = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic"}
-    if image.content_type not in allowed_types:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Unsupported file type: {image.content_type}. Allowed types: {', '.join(allowed_types)}"
-        )
-    
-    # Read image data
-    try:
-        image_data = await image.read()
-        if len(image_data) == 0:
-            raise HTTPException(status_code=400, detail="Empty file uploaded")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error reading image file: {str(e)}")
-    
-    # Extract books from image
-    try:
-        return extraction_service.extract_books_from_image(
-            image_data=image_data,
-            mime_type=image.content_type
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
