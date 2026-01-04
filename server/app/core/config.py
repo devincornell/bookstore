@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     GOOGLE_APPLICATION_CREDENTIALS: str
     GOOGLE_API_KEY: str
 
+    MONGODB_URL: str = "mongodb://localhost:27017"
+    MONGODB_DB_NAME: str = "bookstore"
+
 
 app_settings = Settings()
 

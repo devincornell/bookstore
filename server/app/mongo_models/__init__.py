@@ -1,0 +1,1 @@
+from .book_research import BookResearch, init_beanie_models

@@ -9,7 +9,7 @@ from .base_client_service import BaseClientService
 
 class BookResearchOutput(pydantic.BaseModel):
     provided_title: str = pydantic.Field(description="The title of the book as provided in the research request")
-    provided_author: str|None = pydantic.Field(description="The author of the book as provided in the research request")
+    provided_other_info: str|None = pydantic.Field(description="Other information about the book as provided in the research request. Could include author, publication date, etc.")
     info: BookResearchInfo = pydantic.Field(description="Comprehensive researched information about the book")
     sources: list[ResearchSource] = pydantic.Field(description="List of unique source URLs and their titles used in the research")
 
@@ -19,7 +19,7 @@ class ResearchSource(pydantic.BaseModel):
 
 class BookResearchInfo(pydantic.BaseModel):
     title: str = pydantic.Field(description="The full title of the book")
-    author: str = pydantic.Field(description="The author's name")
+    authors: list[str] = pydantic.Field(description="The authors' names")
     publication_year: int = pydantic.Field(description="The year the book was published")
     isbn: str = pydantic.Field(description="The ISBN number (10 or 13 digits)")
     
@@ -69,7 +69,7 @@ class BookResearchInfo(pydantic.BaseModel):
 class BookResearchService(BaseClientService):
     search_model: str = "gemini-2.5-flash"
     search_prompt: str = (
-        'I need you to do comprehensive research on a book titled \"{title}\" by \"{author}\". '
+        'I need you to do comprehensive research on a book titled \"{title}\". Here is some other info about the book: \"{other_info}\". '
         "Search the web thoroughly and provide detailed information for ALL of the following categories. "
         "Be thorough, specific, and comprehensive in your research:\n\n"
         
@@ -146,15 +146,15 @@ class BookResearchService(BaseClientService):
         client = genai.Client(api_key=api_key)
         return cls(client=client, **kwargs)
     
-    def research_book(self, title: str, author: str|None) -> BookResearchOutput:
+    def research_book(self, title: str, other_info: str|None) -> BookResearchOutput:
         """Perform comprehensive research on a book and return structured info"""
-        research_output, sources = self._search_book_info(title=title, author=author)
+        research_output, sources = self._search_book_info(title=title, other_info=other_info)
         structured_info = self._structure_book_info(research_output=research_output)
         return BookResearchOutput(
             info=structured_info,
             sources=sources,
             provided_title=title,
-            provided_author=author
+            provided_other_info=other_info
         )
     
     def _structure_book_info(self, research_output: str) -> BookResearchInfo:
@@ -169,11 +169,11 @@ class BookResearchService(BaseClientService):
         )
         return response.parsed
 
-    def _search_book_info(self, title: str, author: str|None) -> tuple[str, list[ResearchSource]]:
+    def _search_book_info(self, title: str, other_info: str|None) -> tuple[str, list[ResearchSource]]:
         """Search for book information using Google GenAI"""
         response = self.client.models.generate_content(
             model=self.search_model,
-            contents=self.search_prompt.format(title=title, author=author or "Unknown Author"),
+            contents=self.search_prompt.format(title=title, other_info=other_info),
             config=types.GenerateContentConfig(
                 tools=[types.Tool(google_search=types.GoogleSearch())]
             )

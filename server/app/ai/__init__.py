@@ -1,7 +1,8 @@
 from .research_service import (
     BookResearchService,
     BookResearchInfo,
-    BookResearchOutput
+    BookResearchOutput,
+    ResearchSource,
 )
 from .embedding_service import (
     EmbeddingService,

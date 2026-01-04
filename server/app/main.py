@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints.books import router as books_router
+#from app.api.endpoints.books import router as books_router
 from app.api.endpoints.book_research import router as research_router  # Re-enabled with google-genai
-from app.core.config import settings
+from app.core.config import app_settings
 
 # Create FastAPI instance
 app = FastAPI(
@@ -23,18 +23,17 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(
-    books_router, 
-    prefix="/books", 
-    tags=["books"]
-)
+#app.include_router(
+#    books_router, 
+#    prefix="/books", 
+#    tags=["books"]
+#)
 
 app.include_router(
     research_router,
     prefix="/research",
     tags=["book-research"]
 )
-
 
 @app.get("/")
 def read_root():
@@ -44,7 +43,6 @@ def read_root():
         "docs": "/docs",
         "redoc": "/redoc"
     }
-
 
 @app.get("/health")
 def health_check():
@@ -56,7 +54,7 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "main:app",
-        host=settings.HOST,
-        port=settings.PORT,
-        reload=settings.DEBUG
+        host=app_settings.HOST,
+        port=app_settings.PORT,
+        reload=app_settings.DEBUG
     )
