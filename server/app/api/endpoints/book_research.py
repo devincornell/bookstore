@@ -99,7 +99,7 @@ async def recommend_books(
     books = await BookResearch.find_all().to_list()
     return recommend_service.recommend_books(
         recommend_criteria=recommend_criteria,
-        book_info=books
+        book_info=[br.research_output.info for br in books],
     )
 
 @router.delete("/delete_book/{book_id}")
