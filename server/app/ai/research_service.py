@@ -11,7 +11,11 @@ class BookResearchOutput(pydantic.BaseModel):
     provided_title: str = pydantic.Field(description="The title of the book as provided in the research request")
     provided_author: str|None = pydantic.Field(description="The author of the book as provided in the research request")
     info: BookResearchInfo = pydantic.Field(description="Comprehensive researched information about the book")
-    sources: list[dict[str, str]] = pydantic.Field(description="List of unique source URLs and their titles used in the research")
+    sources: list[ResearchSource] = pydantic.Field(description="List of unique source URLs and their titles used in the research")
+
+class ResearchSource(pydantic.BaseModel):
+    name: str = pydantic.Field(description="The name or title of the source")
+    url: str = pydantic.Field(description="The URL of the source")
 
 class BookResearchInfo(pydantic.BaseModel):
     title: str = pydantic.Field(description="The full title of the book")
@@ -165,7 +169,7 @@ class BookResearchService(BaseClientService):
         )
         return response.parsed
 
-    def _search_book_info(self, title: str, author: str|None) -> tuple[str, list[tuple[str, str]]]:
+    def _search_book_info(self, title: str, author: str|None) -> tuple[str, list[ResearchSource]]:
         """Search for book information using Google GenAI"""
         response = self.client.models.generate_content(
             model=self.search_model,
@@ -177,7 +181,7 @@ class BookResearchService(BaseClientService):
         return response.text, self._get_unique_sources(response=response)
     
     @staticmethod
-    def _get_unique_sources(response: types.GenerateContentResponse) -> list[tuple[str, str]]:
+    def _get_unique_sources(response: types.GenerateContentResponse) -> list[ResearchSource]:
         """Extract unique source URLs from grounding metadata"""
         metadata = response.candidates[0].grounding_metadata
         if metadata is None:
@@ -190,4 +194,4 @@ class BookResearchService(BaseClientService):
                     url = chunk.web.uri
                     if url not in sources:
                         sources[url] = chunk.web.title
-        return [{'name': v, 'url': k} for k,v in sources.items()]
+        return [ResearchSource(name=v, url=k) for k,v in sources.items()]
