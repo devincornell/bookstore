@@ -45,8 +45,19 @@ async def books_recommend(
         book_info=[br.research_output.info for br in books],
     )
 
+class BookInfoResponse(BaseModel):
+    id: str = pydantic.Field(description="MongoDB document ID of the researched book")
+    info: BookResearchInfo = pydantic.Field(description="Detailed information about the researched book")
+
+    @classmethod
+    def from_book_research(cls, book_research: BookResearch) -> "BookInfoResponse":
+        return cls(
+            id=str(book_research.id),
+            info=book_research.research_output.info
+        )
+
 class BookListResponse(BaseModel):
-    books: list[BookResearchInfo] = pydantic.Field(description="List of researched books")
+    books: list[BookInfoResponse] = pydantic.Field(description="List of researched books")
 
 @router.get("/list", response_model=BookListResponse)
 async def books_list(
@@ -54,7 +65,7 @@ async def books_list(
     await init_beanie_models()
     books = await BookResearch.find_all().to_list()
     return BookListResponse(
-        books=[br.research_output.info for br in books]
+        books=[BookInfoResponse.from_book_research(br) for br in books]
     )
 
 @router.delete("/delete/{book_id}")
