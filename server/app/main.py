@@ -6,8 +6,11 @@ from fastapi.responses import HTMLResponse
 
 
 from app.core.config import app_settings
-from app.api.endpoints.book_research import router as research_router
-from app.api.endpoints.extract import router as extract_router
+from app.api.endpoints import (
+    books_router,
+    research_router,
+    extract_router,
+)
 
 # Create FastAPI instance
 app = FastAPI(
@@ -38,15 +41,21 @@ app.add_middleware(
 #)
 
 app.include_router(
+    books_router,
+    prefix="/books",
+    tags=["books"]
+)
+
+app.include_router(
     research_router,
     prefix="/research",
-    tags=["book-research"]
+    tags=["research"]
 )
 
 app.include_router(
     extract_router,
     prefix="/extract",
-    tags=["book-extract"]
+    tags=["extract"]
 )
 
 @app.get("/")

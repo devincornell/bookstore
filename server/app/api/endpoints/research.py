@@ -28,24 +28,11 @@ from app.ai import (
 
 research_service = BookResearchService.from_api_key(app_settings.GOOGLE_API_KEY)
 recommend_service = BookRecommendService.from_api_key(app_settings.GOOGLE_API_KEY)
+
+
+
 router = APIRouter()
 
-
-
-class BookResearchResponse(BaseModel):
-    id: str = pydantic.Field(description="The MongoDB document ID")
-    provided_title: str = pydantic.Field(description="The title of the book as provided in the research request")
-    provided_other_info: str|None = pydantic.Field(description="Other information about the book that could be used to identify the correct book. Could include author, publication date, etc.")
-    research_output: BookResearchOutput = pydantic.Field(description="Comprehensive researched information about the book")
-    
-    @classmethod
-    def from_mongo_model(cls, model: BookResearch) -> typing.Self:
-        return cls(
-            id=str(model.id),
-            provided_title=model.provided_title,
-            provided_other_info=model.provided_other_info,
-            research_output=model.research_output,
-        )
 
 class SingleBookResearchRequest(BaseModel):
     title: str = Field(..., description="Book title to research")
@@ -69,13 +56,13 @@ async def research_book_async(
         )
         tasks.append(task)
         background_tasks.add_task(
-            background_research,
+            background_task_research,
             brq,
             task,
         )
     return tasks
 
-async def background_research(
+async def background_task_research(
     research_request: SingleBookResearchRequest,
     task: ResearchTask,
 ) -> None:
@@ -91,11 +78,9 @@ async def background_research(
             provided_other_info=research_request.other_info,
             research_output=research_output,
         )
-        #await task.delete()
         task.status = TaskStatusEnum.SUCCESS
         await task.save()
     except Exception as e:
-        # Log error - in real app, consider updating task status instead
         print(f"Error researching book '{research_request.title}': {str(e)}")
         task.status = TaskStatusEnum.FAILURE
         await task.save()
@@ -115,9 +100,9 @@ async def research_and_insert(
         provided_other_info=request.other_info,
         research_output=research_output,
     )
-    return new_book#BookResearchResponse.from_mongo_model(new_book)
+    return new_book
 
-@router.get("/research", response_model=BookResearchOutput)
+@router.get("/quick", response_model=BookResearchOutput)
 async def research(
     title: str = Query(..., description="Book title to research"),
     other_info: Optional[str] = Query(None, description="Other information about the book"),
@@ -129,8 +114,39 @@ async def research(
     )
     return research_output
 
+
+
 class ResearchTasks(BaseModel):
     tasks: list[ResearchTask] = pydantic.Field(description="List of research tasks")
+
+@router.get("/tasks/get/{task_id}", response_model=ResearchTask)
+async def research_task_get(
+    task_id: str
+) -> ResearchTask:
+    await init_beanie_models()
+    task = await ResearchTask.get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Research task not found")
+    return task
+
+
+@router.get("/tasks/list_working", response_model=ResearchTasks)
+async def research_tasks_list(
+) -> ResearchTasks:
+    await init_beanie_models()
+    tasks = await ResearchTask.find(ResearchTask.status == TaskStatusEnum.WORKING).to_list()
+    return ResearchTasks(
+        tasks = tasks,
+    )
+
+@router.get("/tasks/list_failed", response_model=ResearchTasks)
+async def research_tasks_list(
+) -> ResearchTasks:
+    await init_beanie_models()
+    tasks = await ResearchTask.find(ResearchTask.status == TaskStatusEnum.FAILURE).to_list()
+    return ResearchTasks(
+        tasks = tasks,
+    )
 
 @router.get("/tasks/list", response_model=ResearchTasks)
 async def research_tasks_list(
@@ -149,42 +165,4 @@ async def research_tasks_clear(
     return True
 
 
-@router.get("/books/recommend", response_model=BookRecommendOutput)
-async def books_recommend(
-    recommend_criteria: Optional[str] = Query(None, description="Criteria for recommending books")
-) -> BookRecommendOutput:
-    await init_beanie_models()
-    books = await BookResearch.find_all().to_list()
-    return await recommend_service.recommend_books(
-        recommend_criteria=recommend_criteria,
-        book_info=[br.research_output.info for br in books],
-    )
-
-
-class BookListResponse(BaseModel):
-    books: list[BookResearchInfo] = pydantic.Field(description="List of researched books")
-
-@router.get("/books/list", response_model=BookListResponse)
-async def books_list(
-) -> BookListResponse:
-    await init_beanie_models()
-    books = await BookResearch.find_all().to_list()
-    return BookListResponse(
-        books=[br.research_output.info for br in books]
-    )
-
-@router.delete("/books/delete/{book_id}")
-async def books_delete(
-    book_id: str
-):
-    """Delete a book by its MongoDB document ID."""
-    await init_beanie_models()
-    try:
-        book = await BookResearch.get(book_id)
-        if not book:
-            raise HTTPException(status_code=404, detail="Book not found")
-        await book.delete()
-        return {"message": "Book deleted successfully", "deleted_id": book_id}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error deleting book: {str(e)}")
 
