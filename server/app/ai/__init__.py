@@ -13,3 +13,7 @@ from .recommend_service import (
     BookRecommendOutput,
     RecommendedBook,
 )
+from .extraction_service import (
+    BookExtractionService,
+    BookExtractionOutput,
+)

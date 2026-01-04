@@ -63,6 +63,30 @@ def test_get_list_books():
     print("-" * 50)
 
 
+def test_get_extract_books():
+    """Test the GET /extract_books endpoint"""
+    print("Testing GET /extract_books endpoint...")
+    
+    url = f"{BASE_URL}/research/extract_books"
+    
+    try:
+        response = requests.get(url, params={"book_list_unstructured": "The Great Gatsby by F. Scott Fitzgerald, 1984 by George Orwell"})
+        print(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 200:
+            print("✅ GET /extract_books - SUCCESS")
+            result = response.json()
+            print(f"Response: {json.dumps(result, indent=2)}")
+        else:
+            print("❌ GET /extract_books - FAILED")
+            print(f"Error: {response.text}")
+            
+    except requests.exceptions.RequestException as e:
+        print(f"❌ GET /extract_books - CONNECTION ERROR: {e}")
+    
+    print("-" * 50)
+
+
 def test_post_research_and_insert():
     """Test the POST /research_and_insert endpoint"""
     print("Testing POST /research_and_insert endpoint...")
@@ -121,8 +145,9 @@ def main():
     
     # Test both endpoints
     #test_get_research()
-    test_get_list_books()
-    test_post_research_and_insert()
+    test_get_extract_books()
+    #test_get_list_books()
+    #test_post_research_and_insert()
     
     print("Test script completed!")
 

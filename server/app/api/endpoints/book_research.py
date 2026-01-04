@@ -22,11 +22,13 @@ from app.ai import (
     BookResearchInfo,
     BookRecommendService,
     BookRecommendOutput,
+    BookExtractionService,
+    BookExtractionOutput,
 )
 
 research_service = BookResearchService.from_api_key(app_settings.GOOGLE_API_KEY)
 recommend_service = BookRecommendService.from_api_key(app_settings.GOOGLE_API_KEY)
-
+extraction_service = BookExtractionService.from_api_key(app_settings.GOOGLE_API_KEY)
 router = APIRouter()
 
 class BookResearchRequest(BaseModel):
@@ -117,3 +119,10 @@ async def delete_book(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error deleting book: {str(e)}")
 
+@router.get("/extract_books", response_model=BookExtractionOutput)
+async def extract_books(
+    book_list_unstructured: str = Query(..., description="Unstructured list of books + metadata to extract")
+) -> BookExtractionOutput:
+    return extraction_service.extract_books(
+        book_list_unstructured=book_list_unstructured,
+    )
