@@ -317,6 +317,187 @@
             font-style: italic;
         }
 
+        /* Bulk Import Styles */
+        .import-tabs {
+            display: flex;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #7f8c8d;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .image-upload-area {
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            background: rgba(52, 152, 219, 0.05);
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .image-upload-area:hover {
+            background: rgba(52, 152, 219, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .image-upload-area.dragover {
+            background: rgba(52, 152, 219, 0.15);
+            border-color: #2980b9;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #3498db;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            color: #34495e;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-subtext {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            margin: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-webcam {
+            background: #e67e22;
+            color: white;
+            margin: 0.5rem;
+        }
+
+        .btn-webcam:hover {
+            background: #d35400;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .camera-container {
+            text-align: center;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .camera-container.active {
+            display: block;
+        }
+
+        video, canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .camera-controls {
+            margin: 1rem 0;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .extracted-books-preview {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .extracted-books-preview.show {
+            display: block;
+        }
+
+        .extracted-book-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .book-info {
+            flex: 1;
+        }
+
+        .book-title {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .book-other-info {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .remove-book-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .remove-book-btn:hover {
+            background: #c0392b;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .container {
@@ -364,6 +545,92 @@
                 </button>
             </form>
             <div id="researchStatus"></div>
+        </div>
+        
+        <!-- Bulk Import Section -->
+        <div class="section">
+            <h2>📚 Bulk Import Books</h2>
+            <p style="margin-bottom: 1rem; color: #7f8c8d;">Extract multiple book titles and information from text or images, then research them all at once.</p>
+            
+            <div class="import-tabs">
+                <button class="tab-button active" onclick="switchTab('text')">📝 Text Import</button>
+                <button class="tab-button" onclick="switchTab('image')">🖼️ Image Import</button>
+            </div>
+
+            <!-- Text Import Tab -->
+            <div id="textTab" class="tab-content active">
+                <form id="textImportForm" class="research-form">
+                    <div class="form-group">
+                        <label for="bookListText">Book List (Unstructured Text)</label>
+                        <textarea 
+                            id="bookListText" 
+                            name="book_list_text" 
+                            placeholder="Paste your book list here... Can be any format: titles with authors, reading lists, bibliographies, etc."
+                            style="min-height: 150px;"
+                        ></textarea>
+                    </div>
+                    <button type="submit" class="btn" id="textImportBtn">
+                        📝 Extract Books from Text
+                    </button>
+                </form>
+                <div id="textImportStatus"></div>
+            </div>
+
+            <!-- Image Import Tab -->
+            <div id="imageTab" class="tab-content">
+                <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('imageInput').click()">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-text">Click to upload, drag & drop, or paste an image</div>
+                    <div class="upload-subtext">
+                        Supports book covers, reading lists, library catalogs, bookstore displays<br>
+                        Formats: JPEG, PNG, WebP, HEIC
+                    </div>
+                    <div class="button-group" style="margin-top: 1rem;">
+                        <button type="button" class="btn" onclick="event.stopPropagation(); document.getElementById('imageInput').click()">
+                            📁 Choose File
+                        </button>
+                        <button type="button" class="btn-webcam" onclick="event.stopPropagation(); startWebcam()">
+                            📸 Take Photo
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="event.stopPropagation(); clearImage()">
+                            🗑️ Clear
+                        </button>
+                    </div>
+                    <input type="file" id="imageInput" class="file-input" accept="image/*" onchange="handleImageUpload(event)">
+                </div>
+
+                <div class="camera-container" id="cameraContainer">
+                    <video id="cameraVideo" autoplay playsinline></video>
+                    <canvas id="cameraCanvas" style="display: none;"></canvas>
+                    <div class="camera-controls">
+                        <button type="button" class="btn" onclick="capturePhoto()">📸 Capture</button>
+                        <button type="button" class="btn-secondary" onclick="stopWebcam()">❌ Cancel</button>
+                    </div>
+                </div>
+
+                <div id="imagePreviewContainer"></div>
+
+                <form id="imageImportForm" class="research-form" style="display: none;">
+                    <button type="submit" class="btn" id="imageImportBtn">
+                        🖼️ Extract Books from Image
+                    </button>
+                </form>
+                <div id="imageImportStatus"></div>
+            </div>
+
+            <!-- Extracted Books Preview -->
+            <div id="extractedBooksPreview" class="extracted-books-preview">
+                <h3 style="margin-bottom: 1rem; color: #2c3e50;">📋 Extracted Books</h3>
+                <div id="extractedBooksList"></div>
+                <div style="margin-top: 1rem;">
+                    <button type="button" class="btn" id="researchAllBtn" onclick="researchAllExtractedBooks()">
+                        🔍 Research All Books
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="clearExtractedBooks()">
+                        🗑️ Clear All
+                    </button>
+                </div>
+            </div>
         </div>
         
         <!-- Books List Section -->
@@ -418,6 +685,27 @@
         const recommendationsContainer = document.getElementById('recommendationsContainer');
         const recommendationsSection = document.getElementById('recommendationsSection');
 
+        // Bulk import elements
+        const textImportForm = document.getElementById('textImportForm');
+        const textImportBtn = document.getElementById('textImportBtn');
+        const textImportStatus = document.getElementById('textImportStatus');
+        const imageImportForm = document.getElementById('imageImportForm');
+        const imageImportBtn = document.getElementById('imageImportBtn');
+        const imageImportStatus = document.getElementById('imageImportStatus');
+        const imageUploadArea = document.getElementById('imageUploadArea');
+        const imageInput = document.getElementById('imageInput');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const cameraVideo = document.getElementById('cameraVideo');
+        const cameraCanvas = document.getElementById('cameraCanvas');
+        const extractedBooksPreview = document.getElementById('extractedBooksPreview');
+        const extractedBooksList = document.getElementById('extractedBooksList');
+        const researchAllBtn = document.getElementById('researchAllBtn');
+
+        // Global variables
+        let currentImageFile = null;
+        let currentStream = null;
+        let extractedBooks = [];
+
         // Research form submission
         researchForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -431,6 +719,56 @@
                 await getRecommendationsWithCriteria();
             });
         }
+
+        // Bulk import form submissions
+        textImportForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await extractBooksFromText();
+        });
+
+        imageImportForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await extractBooksFromImage();
+        });
+
+        // Image upload area event listeners
+        imageUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageUploadArea.classList.add('dragover');
+        });
+
+        imageUploadArea.addEventListener('dragleave', () => {
+            imageUploadArea.classList.remove('dragover');
+        });
+
+        imageUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageUploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                handleImageFile(files[0]);
+            }
+        });
+
+        // Clipboard paste support
+        document.addEventListener('paste', (e) => {
+            const items = e.clipboardData?.items;
+            if (!items) return;
+
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.type.startsWith('image/')) {
+                    e.preventDefault();
+                    const file = item.getAsFile();
+                    if (file) {
+                        switchTab('image');
+                        handleImageFile(file);
+                    }
+                    break;
+                }
+            }
+        });
 
         // Research a book
         async function researchBook() {
@@ -784,6 +1122,325 @@
 
         // Load books on page load
         document.addEventListener('DOMContentLoaded', loadBooks);
+
+        // === BULK IMPORT FUNCTIONALITY ===
+
+        // Switch between text and image import tabs
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        // Handle image upload from file input
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleImageFile(file);
+            }
+        }
+
+        // Handle image file (from upload, drag/drop, or paste)
+        function handleImageFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showImageStatus('error', 'Please select a valid image file.');
+                return;
+            }
+
+            currentImageFile = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const previewContainer = document.getElementById('imagePreviewContainer');
+                previewContainer.innerHTML = `
+                    <img src="${e.target.result}" class="image-preview" alt="Uploaded image">
+                    <p style="text-align: center; color: #7f8c8d; font-size: 0.9rem; margin-top: 0.5rem;">
+                        File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                `;
+                imageImportForm.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Start webcam for photo capture
+        async function startWebcam() {
+            try {
+                const constraints = {
+                    video: {
+                        facingMode: 'environment', // Prefer back camera on mobile
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                cameraVideo.srcObject = currentStream;
+                cameraContainer.classList.add('active');
+                imageUploadArea.style.display = 'none';
+
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                showImageStatus('error', 'Error accessing camera. Please check permissions or use file upload instead.');
+            }
+        }
+
+        // Capture photo from webcam
+        function capturePhoto() {
+            const canvas = cameraCanvas;
+            const video = cameraVideo;
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            
+            // Convert to blob
+            canvas.toBlob((blob) => {
+                const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+                handleImageFile(file);
+                stopWebcam();
+            }, 'image/jpeg', 0.8);
+        }
+
+        // Stop webcam
+        function stopWebcam() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+            cameraContainer.classList.remove('active');
+            imageUploadArea.style.display = 'block';
+        }
+
+        // Clear image
+        function clearImage() {
+            currentImageFile = null;
+            document.getElementById('imagePreviewContainer').innerHTML = '';
+            imageImportForm.style.display = 'none';
+            imageInput.value = '';
+            imageImportStatus.innerHTML = '';
+        }
+
+        // Extract books from text
+        async function extractBooksFromText() {
+            const formData = new FormData(textImportForm);
+            const bookListText = formData.get('book_list_text');
+
+            if (!bookListText.trim()) {
+                showTextStatus('error', 'Please enter some book information to extract.');
+                return;
+            }
+
+            textImportBtn.disabled = true;
+            textImportBtn.textContent = 'Extracting...';
+            showTextStatus('loading', '🔍 Extracting book information from text...');
+
+            try {
+                const url = new URL(`${API_BASE}/research/extract_books`);
+                url.searchParams.append('book_list_unstructured', bookListText);
+
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                handleExtractedBooks(data.books);
+                showTextStatus('success', '✅ Books extracted successfully!');
+                textImportForm.reset();
+
+            } catch (error) {
+                console.error('Text extraction error:', error);
+                showTextStatus('error', `❌ Error extracting books: ${error.message}`);
+            } finally {
+                textImportBtn.disabled = false;
+                textImportBtn.textContent = '📝 Extract Books from Text';
+            }
+        }
+
+        // Extract books from image
+        async function extractBooksFromImage() {
+            if (!currentImageFile) {
+                showImageStatus('error', 'Please select an image first.');
+                return;
+            }
+
+            imageImportBtn.disabled = true;
+            imageImportBtn.textContent = 'Extracting...';
+            showImageStatus('loading', '🔍 Analyzing image and extracting book information...');
+
+            try {
+                const formData = new FormData();
+                formData.append('image', currentImageFile);
+
+                const response = await fetch(`${API_BASE}/research/extract_books_from_image`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to extract books from image');
+                }
+
+                const data = await response.json();
+                handleExtractedBooks(data.books);
+                showImageStatus('success', '✅ Books extracted from image successfully!');
+
+            } catch (error) {
+                console.error('Image extraction error:', error);
+                showImageStatus('error', `❌ Error extracting books: ${error.message}`);
+            } finally {
+                imageImportBtn.disabled = false;
+                imageImportBtn.textContent = '🖼️ Extract Books from Image';
+            }
+        }
+
+        // Handle extracted books and show preview
+        function handleExtractedBooks(books) {
+            if (!books || books.length === 0) {
+                showExtractedBooksMessage('No books were found in the provided input.');
+                return;
+            }
+
+            // Add to global extracted books array (avoid duplicates)
+            books.forEach(book => {
+                const exists = extractedBooks.some(existing => 
+                    existing.title.toLowerCase() === book.title.toLowerCase() &&
+                    existing.other_info.toLowerCase() === book.other_info.toLowerCase()
+                );
+                if (!exists) {
+                    extractedBooks.push(book);
+                }
+            });
+
+            renderExtractedBooks();
+        }
+
+        // Render extracted books preview
+        function renderExtractedBooks() {
+            if (extractedBooks.length === 0) {
+                extractedBooksPreview.classList.remove('show');
+                return;
+            }
+
+            extractedBooksList.innerHTML = extractedBooks.map((book, index) => `
+                <div class="extracted-book-item">
+                    <div class="book-info">
+                        <div class="book-title">${book.title}</div>
+                        <div class="book-other-info">${book.other_info || 'No additional info'}</div>
+                    </div>
+                    <button class="remove-book-btn" onclick="removeExtractedBook(${index})">
+                        ✕
+                    </button>
+                </div>
+            `).join('');
+
+            extractedBooksPreview.classList.add('show');
+            researchAllBtn.textContent = `🔍 Research All Books (${extractedBooks.length})`;
+        }
+
+        // Remove a book from extracted books
+        function removeExtractedBook(index) {
+            extractedBooks.splice(index, 1);
+            renderExtractedBooks();
+        }
+
+        // Clear all extracted books
+        function clearExtractedBooks() {
+            extractedBooks = [];
+            extractedBooksPreview.classList.remove('show');
+        }
+
+        // Research all extracted books
+        async function researchAllExtractedBooks() {
+            if (extractedBooks.length === 0) return;
+
+            researchAllBtn.disabled = true;
+            researchAllBtn.textContent = 'Researching...';
+
+            const statusContainer = document.createElement('div');
+            statusContainer.className = 'loading';
+            statusContainer.innerHTML = `🔍 Researching ${extractedBooks.length} books... This may take several minutes.`;
+            extractedBooksPreview.appendChild(statusContainer);
+
+            let successCount = 0;
+            let errors = [];
+
+            for (let i = 0; i < extractedBooks.length; i++) {
+                const book = extractedBooks[i];
+                statusContainer.innerHTML = `🔍 Researching book ${i + 1}/${extractedBooks.length}: "${book.title}"...`;
+
+                try {
+                    const response = await fetch(`${API_BASE}/research/research_and_insert`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            title: book.title,
+                            other_info: book.other_info || null
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    successCount++;
+                } catch (error) {
+                    console.error(`Error researching "${book.title}":`, error);
+                    errors.push(`${book.title}: ${error.message}`);
+                }
+
+                // Small delay to avoid overwhelming the API
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            // Show final status
+            if (errors.length === 0) {
+                statusContainer.className = 'success';
+                statusContainer.innerHTML = `✅ Successfully researched all ${successCount} books!`;
+            } else {
+                statusContainer.className = 'error';
+                statusContainer.innerHTML = `⚠️ Researched ${successCount}/${extractedBooks.length} books. ${errors.length} errors occurred:<br>` +
+                    errors.slice(0, 3).join('<br>') + (errors.length > 3 ? '<br>...' : '');
+            }
+
+            // Refresh the books list and clear extracted books
+            await loadBooks();
+            setTimeout(() => {
+                clearExtractedBooks();
+                statusContainer.remove();
+            }, 5000);
+
+            researchAllBtn.disabled = false;
+            researchAllBtn.textContent = `🔍 Research All Books`;
+        }
+
+        // Show status messages for text import
+        function showTextStatus(type, message) {
+            textImportStatus.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        // Show status messages for image import
+        function showImageStatus(type, message) {
+            imageImportStatus.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        // Show message in extracted books preview area
+        function showExtractedBooksMessage(message) {
+            extractedBooksList.innerHTML = `<div class="loading">${message}</div>`;
+            extractedBooksPreview.classList.add('show');
+        }
     </script>
 </body>
 </html>
