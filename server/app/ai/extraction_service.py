@@ -28,6 +28,13 @@ class BookExtractionService(BaseClientService):
         "into discrete books/entries:\n\n"
         "book_list: {book_list_text}\n\n"
     )
+    image_input_model: str = "gemini-2.5-flash"
+    image_input_prompt: str = (
+        "Analyze this image and extract all visible book information. Look for book titles, authors, "
+        "publication years, and any other relevant metadata visible in the image. This could be from "
+        "book covers, book spines, library catalogs, bookstore displays, reading lists, or any other "
+        "source showing book information. Organize the extracted information into a structured JSON format."
+    )
     
     def extract_books(self, book_list_unstructured: str) -> BookExtractionOutput:
         """Generate book recommendations based on criteria and a list of books"""
@@ -37,6 +44,24 @@ class BookExtractionService(BaseClientService):
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema=BookExtractionOutput # <--- Pass your Pydantic class here!
+            )
+        )
+        return response.parsed
+    
+    def extract_books_from_image(self, image_data: bytes, mime_type: str = "image/jpeg") -> BookExtractionOutput:
+        """Extract book information from an image containing book titles, covers, or lists"""
+        # Create the image part for multimodal input
+        image_part = types.Part.from_bytes(data=image_data, mime_type=mime_type)
+        
+        response = self.client.models.generate_content(
+            model=self.image_input_model,
+            contents=[
+                self.image_input_prompt,
+                image_part
+            ],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=BookExtractionOutput
             )
         )
         return response.parsed
