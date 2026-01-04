@@ -498,6 +498,210 @@
             background: #c0392b;
         }
 
+        /* Task Monitoring Styles */
+        .task-monitor {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .task-monitor.show {
+            display: block;
+        }
+
+        .task-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .task-item.processing {
+            border-left: 4px solid #3498db;
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+        .task-item.completed {
+            border-left: 4px solid #27ae60;
+            background: rgba(39, 174, 96, 0.05);
+        }
+
+        .task-item.failed {
+            border-left: 4px solid #e74c3c;
+            background: rgba(231, 76, 60, 0.05);
+        }
+
+        .task-info {
+            flex: 1;
+        }
+
+        .task-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.25rem;
+        }
+
+        .task-meta {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .task-progress {
+            margin: 0.5rem 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-top: 0.25rem;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-mini {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-mini.info {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-mini.info:hover {
+            background: #2980b9;
+        }
+
+        .btn-mini.success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-mini.success:hover {
+            background: #219a52;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #f39c12;
+            color: white;
+        }
+
+        .status-processing {
+            background: #3498db;
+            color: white;
+        }
+
+        .status-completed {
+            background: #27ae60;
+            color: white;
+        }
+
+        .status-failed {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .async-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            padding: 0.75rem;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 5px;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+
+        .async-toggle input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .async-toggle label {
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .task-results {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .task-results.show {
+            display: block;
+        }
+
+        .result-summary {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .result-stat {
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            text-align: center;
+        }
+
+        .result-stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .result-stat-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .container {
@@ -518,38 +722,31 @@
     <div class="container">
         <h1>📚 Bookstore Research</h1>
         
-        <!-- Research Form Section -->
+        <!-- Task Monitor Section -->
         <div class="section">
-            <h2>🔍 Research a New Book</h2>
-            <form id="researchForm" class="research-form">
-                <div class="form-group">
-                    <label for="bookTitle">Book Title *</label>
-                    <input 
-                        type="text" 
-                        id="bookTitle" 
-                        name="title" 
-                        required 
-                        placeholder="Enter the book title..."
-                    />
-                </div>
-                <div class="form-group">
-                    <label for="otherInfo">Additional Information</label>
-                    <textarea 
-                        id="otherInfo" 
-                        name="other_info" 
-                        placeholder="Author, publication year, or any other helpful details..."
-                    ></textarea>
-                </div>
-                <button type="submit" class="btn" id="researchBtn">
-                    Research Book
+            <h2>⚡ Research Tasks</h2>
+            <div style="margin-bottom: 1rem;">
+                <button onclick="refreshTasks()" class="btn">
+                    🔄 Refresh Tasks
                 </button>
-            </form>
-            <div id="researchStatus"></div>
+                <p style="margin: 0.5rem 0; color: #7f8c8d; font-size: 0.9rem;">Shows active and failed research tasks</p>
+            </div>
+            
+            <div id="activeTasksContainer">
+                <!-- Active tasks will appear here -->
+            </div>
+
+            <div id="taskMonitor" class="task-monitor show">
+                <h3 style="margin-bottom: 1rem; color: #2c3e50;">Working & Failed Tasks</h3>
+                <div id="allTasksContainer">
+                    <div class="loading">Loading tasks...</div>
+                </div>
+            </div>
         </div>
         
         <!-- Bulk Import Section -->
         <div class="section">
-            <h2>📚 Bulk Import Books</h2>
+            <h2>📚 Add Books</h2>
             <p style="margin-bottom: 1rem; color: #7f8c8d;">Extract multiple book titles and information from text or images, then research them all at once.</p>
             
             <div class="import-tabs">
@@ -629,6 +826,12 @@
                     <button type="button" class="btn-secondary" onclick="clearExtractedBooks()">
                         🗑️ Clear All
                     </button>
+                    <div class="async-toggle" style="margin-top: 0.5rem;">
+                        <input type="checkbox" id="useBulkAsync" checked>
+                        <label for="useBulkAsync">
+                            ⚡ Use async bulk research (recommended for multiple books)
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -675,9 +878,6 @@
         const API_BASE = window.location.origin;
 
         // DOM elements
-        const researchForm = document.getElementById('researchForm');
-        const researchBtn = document.getElementById('researchBtn');
-        const researchStatus = document.getElementById('researchStatus');
         const booksContainer = document.getElementById('booksContainer');
         const recommendationForm = document.getElementById('recommendationForm');
         const getRecommendationsBtn = document.getElementById('getRecommendationsBtn');
@@ -705,12 +905,8 @@
         let currentImageFile = null;
         let currentStream = null;
         let extractedBooks = [];
-
-        // Research form submission
-        researchForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await researchBook();
-        });
+        let activeTasks = new Map(); // Track active tasks for polling
+        let taskPollingInterval = null;
 
         // Recommendation form submission
         if (recommendationForm) {
@@ -778,9 +974,62 @@
                 other_info: formData.get('other_info') || null
             };
 
+            const useAsync = document.getElementById('useAsyncResearch').checked;
+
             // Show loading state
             researchBtn.disabled = true;
-            researchBtn.textContent = 'Researching...';
+            researchBtn.textContent = useAsync ? 'Starting Research...' : 'Researching...';
+            
+            if (useAsync) {
+                await researchBookAsync(data);
+            } else {
+                await researchBookSync(data);
+            }
+        }
+
+        // Async book research
+        async function researchBookAsync(data) {
+            researchStatus.innerHTML = '<div class="loading">⚡ Starting async research... You can continue using the app while research runs in background.</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/research/research_and_insert_async`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                researchStatus.innerHTML = `<div class="success">✅ ${result.message}</div>`;
+                
+                // Add to active tasks for monitoring
+                activeTasks.set(result.task_id, {
+                    taskId: result.task_id,
+                    title: data.title,
+                    type: 'single'
+                });
+
+                // Clear form and start monitoring
+                researchForm.reset();
+                startTaskPolling();
+                await refreshActiveTasks();
+
+            } catch (error) {
+                console.error('Async research error:', error);
+                researchStatus.innerHTML = `<div class="error">❌ Error starting research: ${error.message}</div>`;
+            } finally {
+                researchBtn.disabled = false;
+                researchBtn.textContent = 'Research Book';
+            }
+        }
+
+        // Synchronous book research (original)
+        async function researchBookSync(data) {
             researchStatus.innerHTML = '<div class="loading">🔍 Researching book... This may take a minute.</div>';
 
             try {
@@ -799,10 +1048,8 @@
                 const result = await response.json();
                 researchStatus.innerHTML = '<div class="success">✅ Book research completed successfully!</div>';
                 
-                // Clear form
+                // Clear form and reload books
                 researchForm.reset();
-                
-                // Reload books to show the new research
                 await loadBooks();
 
             } catch (error) {
@@ -819,7 +1066,7 @@
             booksContainer.innerHTML = '<div class="loading">Loading books...</div>';
 
             try {
-                const response = await fetch(`${API_BASE}/research/list_books`);
+                const response = await fetch(`${API_BASE}/books/list`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -855,9 +1102,7 @@
 
         // Create a book card element
         function createBookCard(book, index) {
-            const research = book.research_output;
-            const info = research.info;
-
+            const info = book.info; // Now book has id and info properties
             const card = document.createElement('div');
             card.className = 'book-card';
 
@@ -887,7 +1132,7 @@
                 </div>
 
                 <div id="details-${index}" class="book-details">
-                    ${createBookDetails(info, research.sources)}
+                    ${createBookDetails(info)}
                 </div>
             `;
 
@@ -895,7 +1140,7 @@
         }
 
         // Create detailed book information
-        function createBookDetails(info, sources) {
+        function createBookDetails(info) {
             const seriesInfo = info.series_title !== 'Standalone' ? `
                 <div class="detail-section">
                     <h4>📚 Series Information</h4>
@@ -970,15 +1215,6 @@
                         </ul>
                     ` : ''}
                 </div>
-
-                ${sources.length > 0 ? `
-                    <div class="detail-section">
-                        <h4>🔗 Research Sources</h4>
-                        <ul class="detail-list">
-                            ${sources.map(source => `<li><a href="${source.url}" target="_blank" class="source-link">${source.name}</a></li>`).join('')}
-                        </ul>
-                    </div>
-                ` : ''}
             `;
         }
 
@@ -996,7 +1232,7 @@
             }
         }
 
-        // Delete a book
+        // Delete a book using MongoDB document ID
         async function deleteBook(bookId, button) {
             if (!confirm('Are you sure you want to delete this book? This action cannot be undone.')) {
                 return;
@@ -1007,7 +1243,7 @@
             button.textContent = 'Deleting...';
 
             try {
-                const response = await fetch(`${API_BASE}/research/delete_book/${bookId}`, {
+                const response = await fetch(`${API_BASE}/books/delete/${bookId}`, {
                     method: 'DELETE'
                 });
 
@@ -1064,7 +1300,7 @@
             recommendationsContainer.innerHTML = '';
 
             try {
-                const url = new URL(`${API_BASE}/research/recommend_books`);
+                const url = new URL(`${API_BASE}/books/recommend`);
                 if (recommendCriteria && recommendCriteria.trim()) {
                     url.searchParams.append('recommend_criteria', recommendCriteria.trim());
                 }
@@ -1119,9 +1355,6 @@
             recommendationsContainer.innerHTML = '';
             recommendationsContainer.appendChild(container);
         }
-
-        // Load books on page load
-        document.addEventListener('DOMContentLoaded', loadBooks);
 
         // === BULK IMPORT FUNCTIONALITY ===
 
@@ -1243,7 +1476,7 @@
             showTextStatus('loading', '🔍 Extracting book information from text...');
 
             try {
-                const url = new URL(`${API_BASE}/research/extract_books`);
+                const url = new URL(`${API_BASE}/extract/from_text`);
                 url.searchParams.append('book_list_unstructured', bookListText);
 
                 const response = await fetch(url);
@@ -1281,7 +1514,7 @@
                 const formData = new FormData();
                 formData.append('image', currentImageFile);
 
-                const response = await fetch(`${API_BASE}/research/extract_books_from_image`, {
+                const response = await fetch(`${API_BASE}/extract/from_image`, {
                     method: 'POST',
                     body: formData
                 });
@@ -1364,9 +1597,73 @@
         async function researchAllExtractedBooks() {
             if (extractedBooks.length === 0) return;
 
-            researchAllBtn.disabled = true;
-            researchAllBtn.textContent = 'Researching...';
+            const useAsync = document.getElementById('useBulkAsync').checked;
 
+            researchAllBtn.disabled = true;
+            researchAllBtn.textContent = 'Starting...';
+
+            if (useAsync) {
+                await researchBulkAsync();
+            } else {
+                await researchBulkSync();
+            }
+        }
+
+        // Async bulk research
+        async function researchBulkAsync() {
+            const statusContainer = document.createElement('div');
+            statusContainer.className = 'loading';
+            statusContainer.innerHTML = `⚡ Starting bulk research for ${extractedBooks.length} books... Research will run in background.`;
+            extractedBooksPreview.appendChild(statusContainer);
+
+            try {
+                const response = await fetch(`${API_BASE}/research/research_and_insert_async`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ books: extractedBooks })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to start bulk research');
+                }
+
+                const result = await response.json();
+                
+                // Add to active tasks
+                activeTasks.set(result.task_id, {
+                    taskId: result.task_id,
+                    title: `Bulk research (${extractedBooks.length} books)`,
+                    type: 'bulk',
+                    totalBooks: extractedBooks.length
+                });
+
+                statusContainer.className = 'success';
+                statusContainer.innerHTML = `✅ ${result.message}`;
+
+                // Start monitoring and clear extracted books after a delay
+                startTaskPolling();
+                await refreshActiveTasks();
+                
+                setTimeout(() => {
+                    clearExtractedBooks();
+                    statusContainer.remove();
+                }, 3000);
+
+            } catch (error) {
+                console.error('Bulk async research error:', error);
+                statusContainer.className = 'error';
+                statusContainer.innerHTML = `❌ Error starting bulk research: ${error.message}`;
+            } finally {
+                researchAllBtn.disabled = false;
+                researchAllBtn.textContent = `🔍 Research All Books (${extractedBooks.length})`;
+            }
+        }
+
+        // Synchronous bulk research (original)
+        async function researchBulkSync() {
             const statusContainer = document.createElement('div');
             statusContainer.className = 'loading';
             statusContainer.innerHTML = `🔍 Researching ${extractedBooks.length} books... This may take several minutes.`;
@@ -1441,6 +1738,301 @@
             extractedBooksList.innerHTML = `<div class="loading">${message}</div>`;
             extractedBooksPreview.classList.add('show');
         }
+
+        // === TASK MONITORING FUNCTIONS ===
+
+        // Start task polling for active tasks
+        function startTaskPolling() {
+            if (taskPollingInterval) return; // Already polling
+
+            taskPollingInterval = setInterval(async () => {
+                if (activeTasks.size === 0) {
+                    stopTaskPolling();
+                    return;
+                }
+
+                for (const [taskId, taskInfo] of activeTasks.entries()) {
+                    try {
+                        const response = await fetch(`${API_BASE}/research/tasks/get/${taskId}`);
+                        if (response.ok) {
+                            const status = await response.json();
+                            
+                            if (status.status === 'completed') {
+                                activeTasks.delete(taskId);
+                                await loadBooks(); // Refresh books when task completes
+                                showTaskCompletionNotification(taskInfo, status);
+                            } else if (status.status === 'failed') {
+                                activeTasks.delete(taskId);
+                                showTaskFailureNotification(taskInfo, status);
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Error checking task ${taskId}:`, error);
+                    }
+                }
+
+                await refreshActiveTasks();
+            }, 3000); // Poll every 3 seconds
+        }
+
+        // Stop task polling
+        function stopTaskPolling() {
+            if (taskPollingInterval) {
+                clearInterval(taskPollingInterval);
+                taskPollingInterval = null;
+            }
+        }
+
+        // Show task completion notification
+        function showTaskCompletionNotification(taskInfo, status) {
+            const notification = document.createElement('div');
+            notification.className = 'success';
+            notification.innerHTML = `✅ Completed: "${taskInfo.title}" research finished successfully!`;
+            
+            // Add to research status area temporarily
+            researchStatus.appendChild(notification);
+            setTimeout(() => notification.remove(), 5000);
+        }
+
+        // Show task failure notification
+        function showTaskFailureNotification(taskInfo, status) {
+            const notification = document.createElement('div');
+            notification.className = 'error';
+            notification.innerHTML = `❌ Failed: "${taskInfo.title}" research failed. ${status.error_message || ''}`;
+            
+            researchStatus.appendChild(notification);
+            setTimeout(() => notification.remove(), 8000);
+        }
+
+        // Refresh active tasks display
+        async function refreshActiveTasks() {
+            const container = document.getElementById('activeTasksContainer');
+            
+            if (activeTasks.size === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const taskElements = [];
+            
+            for (const [taskId, taskInfo] of activeTasks.entries()) {
+                try {
+                    const response = await fetch(`${API_BASE}/research/tasks/get/${taskId}`);
+                    if (response.ok) {
+                        const status = await response.json();
+                        taskElements.push(createTaskElement(status, taskInfo));
+                    }
+                } catch (error) {
+                    console.error(`Error getting status for task ${taskId}:`, error);
+                }
+            }
+
+            container.innerHTML = taskElements.join('');
+        }
+
+        // Refresh all tasks (for the task monitor section)
+        async function refreshTasks() {
+            await loadWorkingAndFailedTasks();
+        }
+
+        // Create task element HTML
+        function createTaskElement(task, taskInfo = null) {
+            const progress = task.progress;
+            const isActive = activeTasks.has(task.task_id);
+            const statusClass = task.status.toLowerCase();
+            
+            return `
+                <div class="task-item ${statusClass}">
+                    <div class="task-info">
+                        <div class="task-title">
+                            ${taskInfo?.title || getTaskDisplayTitle(task)}
+                        </div>
+                        <div class="task-meta">
+                            <span class="status-badge status-${statusClass}">${task.status}</span>
+                            ${task.task_type} • Created: ${new Date(task.created_at).toLocaleString()}
+                            ${task.completed_at ? ` • Completed: ${new Date(task.completed_at).toLocaleString()}` : ''}
+                        </div>
+                        ${task.status === 'processing' ? `
+                            <div class="task-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${progress.percentage}%"></div>
+                                </div>
+                                <div class="progress-text">
+                                    ${progress.current_item || `Step ${progress.current_step}/${progress.total_steps}`} (${progress.percentage}%)
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${task.error_message ? `<div class="error" style="margin-top: 0.5rem; padding: 0.5rem;">${task.error_message}</div>` : ''}
+                    </div>
+                    <div class="task-actions">
+                        ${task.status === 'completed' ? `
+                            <button class="btn-mini success" onclick="showTaskResult('${task.task_id}')">
+                                📋 Results
+                            </button>
+                        ` : ''}
+                        ${isActive ? `
+                            <button class="btn-mini info" onclick="refreshActiveTasks()">
+                                🔄 Refresh
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Get display title for a task
+        function getTaskDisplayTitle(task) {
+            if (task.task_type === 'single_book_research') {
+                return 'Single book research';
+            } else if (task.task_type.startsWith('bulk_')) {
+                return `Bulk research (${task.progress.total_steps} books)`;
+            }
+            return 'Research task';
+        }
+
+        // Show task result in a popup or modal
+        async function showTaskResult(taskId) {
+            try {
+                const response = await fetch(`${API_BASE}/research/tasks/get/${taskId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                // Create a simple modal-like display
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+                    background: rgba(0,0,0,0.5); z-index: 1000; 
+                    display: flex; align-items: center; justify-content: center;
+                    padding: 20px;
+                `;
+                
+                modal.innerHTML = `
+                    <div style="background: white; border-radius: 10px; padding: 2rem; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                        <h3 style="margin-bottom: 1rem;">Task Results</h3>
+                        <div class="result-summary">
+                            <div class="result-stat">
+                                <div class="result-stat-number">${result.total_books}</div>
+                                <div class="result-stat-label">Total Books</div>
+                            </div>
+                            <div class="result-stat">
+                                <div class="result-stat-number" style="color: #27ae60;">${result.successful}</div>
+                                <div class="result-stat-label">Successful</div>
+                            </div>
+                            <div class="result-stat">
+                                <div class="result-stat-number" style="color: #e74c3c;">${result.errors.length}</div>
+                                <div class="result-stat-label">Errors</div>
+                            </div>
+                        </div>
+                        ${result.errors.length > 0 ? `
+                            <div style="margin-top: 1rem;">
+                                <h4 style="color: #e74c3c; margin-bottom: 0.5rem;">Errors:</h4>
+                                <ul style="margin-left: 1rem;">
+                                    ${result.errors.map(error => `<li style="color: #e74c3c; margin-bottom: 0.25rem;">${error}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        <div style="margin-top: 1.5rem; text-align: right;">
+                            <button class="btn" onclick="this.parentElement.parentElement.parentElement.remove()">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                // Click outside to close
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) modal.remove();
+                });
+
+            } catch (error) {
+                console.error('Error getting task result:', error);
+                alert(`Error loading task result: ${error.message}`);
+            }
+        }
+
+        // Toggle task monitor section
+        // Auto-load working and failed tasks (no toggle needed)
+        function autoLoadTasks() {
+            loadWorkingAndFailedTasks();
+        }
+
+        // Load working and failed tasks specifically
+        async function loadWorkingAndFailedTasks() {
+            try {
+                // Load both working and failed tasks
+                const [workingResponse, failedResponse] = await Promise.all([
+                    fetch(`${API_BASE}/research/tasks/list_working`),
+                    fetch(`${API_BASE}/research/tasks/list_failed`)
+                ]);
+
+                const workingData = workingResponse.ok ? await workingResponse.json() : { tasks: [] };
+                const failedData = failedResponse.ok ? await failedResponse.json() : { tasks: [] };
+                
+                const allTasks = [...workingData.tasks, ...failedData.tasks];
+                displayAllTasks(allTasks);
+                
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                document.getElementById('allTasksContainer').innerHTML = 
+                    '<div class="error">❌ Error loading tasks</div>';
+            }
+        }
+
+        // Initialize all components on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Page loaded, initializing components...');
+            
+            // Load books immediately with error handling
+            try {
+                console.log('Attempting to load books...');
+                await loadBooks();
+                console.log('Books loaded successfully on page load');
+            } catch (error) {
+                console.error('Error loading books on page load:', error);
+                // Show error in the books container
+                if (booksContainer) {
+                    booksContainer.innerHTML = '<div class="error">❌ Error loading books. <button onclick="loadBooks()" class="btn">Try Again</button></div>';
+                }
+            }
+            
+            // Initialize other components
+            try {
+                refreshActiveTasks();
+                autoLoadTasks(); // Always load working and failed tasks
+                console.log('Other components initialized');
+            } catch (error) {
+                console.error('Error initializing other components:', error);
+            }
+                
+                // Start polling if there are any active tasks from previous session
+                // This would happen if user refreshes page during active research
+                setTimeout(async () => {
+                    try {
+                        const response = await fetch(`${API_BASE}/research/tasks/list_working`);
+                        if (response.ok) {
+                            const processingTasks = await response.json();
+                        for (const task of processingTasks) {
+                            activeTasks.set(task.task_id, {
+                                taskId: task.task_id,
+                                title: getTaskDisplayTitle(task),
+                                type: task.task_type
+                            });
+                        }
+                        if (activeTasks.size > 0) {
+                            startTaskPolling();
+                            await refreshActiveTasks();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking for active tasks:', error);
+                }
+            }, 1000);
+        });
     </script>
 </body>
 </html>
