@@ -15,10 +15,11 @@ load_dotenv()
 from app.core.config import app_settings
 #from app.database import get_db
 #from app.models import BookStoreDB
-from app.mongo_models import BookResearch, init_beanie_models, ResearchTask
+from app.mongo_models import BookResearch, init_beanie_models, ResearchTask, TaskStatusEnum
 from app.ai import (
     BookResearchService, 
     BookResearchOutput, 
+    BookResearchInfo,
     BookRecommendService,
     BookRecommendOutput,
     BookExtractionService,
@@ -45,7 +46,6 @@ class BookResearchResponse(BaseModel):
             provided_other_info=model.provided_other_info,
             research_output=model.research_output,
         )
-
 
 class SingleBookResearchRequest(BaseModel):
     title: str = Field(..., description="Book title to research")
@@ -80,17 +80,26 @@ async def background_research(
     task: ResearchTask,
 ) -> None:
     """Background task to research a single book and save to database"""
-    research_output = await research_service.research_book(
-        title=research_request.title,
-        other_info=research_request.other_info,
-    )
-    await init_beanie_models()
-    await BookResearch.insert_book(
-        provided_title=research_request.title,
-        provided_other_info=research_request.other_info,
-        research_output=research_output,
-    )
-    return await task.delete()
+    try:
+        research_output = await research_service.research_book(
+            title=research_request.title,
+            other_info=research_request.other_info,
+        )
+        await init_beanie_models()
+        await BookResearch.insert_book(
+            provided_title=research_request.title,
+            provided_other_info=research_request.other_info,
+            research_output=research_output,
+        )
+        #await task.delete()
+        task.status = TaskStatusEnum.SUCCESS
+        await task.save()
+    except Exception as e:
+        # Log error - in real app, consider updating task status instead
+        print(f"Error researching book '{research_request.title}': {str(e)}")
+        task.status = TaskStatusEnum.FAILURE
+        await task.save()
+
 
 @router.post("/research_and_insert", response_model=BookResearch)
 async def research_and_insert(
@@ -140,8 +149,6 @@ async def research_tasks_clear(
     return True
 
 
-
-
 @router.get("/books/recommend", response_model=BookRecommendOutput)
 async def books_recommend(
     recommend_criteria: Optional[str] = Query(None, description="Criteria for recommending books")
@@ -155,7 +162,7 @@ async def books_recommend(
 
 
 class BookListResponse(BaseModel):
-    books: list[BookResearchResponse] = pydantic.Field(description="List of researched books")
+    books: list[BookResearchInfo] = pydantic.Field(description="List of researched books")
 
 @router.get("/books/list", response_model=BookListResponse)
 async def books_list(
@@ -163,7 +170,7 @@ async def books_list(
     await init_beanie_models()
     books = await BookResearch.find_all().to_list()
     return BookListResponse(
-        books=[BookResearchResponse.from_mongo_model(book) for book in books]
+        books=[br.research_output.info for br in books]
     )
 
 @router.delete("/books/delete/{book_id}")

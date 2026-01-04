@@ -163,7 +163,7 @@ class BookResearchService(BaseClientService):
     
     async def _structure_book_info(self, research_output: str) -> BookResearchInfo:
         """Structure the research output into BookResearchInfo dataclass"""
-        response = await self.client.models.generate_content_async(
+        response = await self.client.aio.models.generate_content(
             model=self.structure_model,
             contents=self.structure_prompt.format(research_output=research_output),
             config=types.GenerateContentConfig(
@@ -175,7 +175,7 @@ class BookResearchService(BaseClientService):
 
     async def _search_book_info(self, title: str, other_info: str|None) -> tuple[str, list[ResearchSource]]:
         """Search for book information using Google GenAI"""
-        response = await self.client.models.generate_content_async(
+        response = await self.client.aio.models.generate_content(
             model=self.search_model,
             contents=self.search_prompt.format(title=title, other_info=other_info),
             config=types.GenerateContentConfig(

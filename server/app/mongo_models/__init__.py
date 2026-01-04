@@ -1,5 +1,5 @@
 from .book_research import BookResearch
-from .research_task import ResearchTask
+from .research_task import ResearchTask, TaskStatusEnum
 
 from .models import (
     init_beanie_models, 

@@ -36,7 +36,7 @@ class BookRecommendService(BaseClientService):
     
     async def recommend_books(self, recommend_criteria: str, book_info: list[BookResearchInfo]) -> BookRecommendOutput:
         """Generate book recommendations based on criteria and a list of books"""
-        response = await self.client.models.generate_content_async(
+        response = await self.client.aio.models.generate_content(
             model=self.model,
             contents=self.prompt.format(recommend_criteria=recommend_criteria, book_list=[book.as_string() for book in book_info]),
             config=types.GenerateContentConfig(
