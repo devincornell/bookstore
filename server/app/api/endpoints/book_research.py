@@ -32,6 +32,7 @@ class BookResearchRequest(BaseModel):
     #save_to_database: bool = Field(False, description="Whether to save the research result to the database")
 
 class BookResearchResponse(BaseModel):
+    id: str = pydantic.Field(description="The MongoDB document ID")
     provided_title: str = pydantic.Field(description="The title of the book as provided in the research request")
     provided_other_info: str|None = pydantic.Field(description="Other information about the book that could be used to identify the correct book. Could include author, publication date, etc.")
     research_output: BookResearchOutput = pydantic.Field(description="Comprehensive researched information about the book")
@@ -39,6 +40,7 @@ class BookResearchResponse(BaseModel):
     @classmethod
     def from_mongo_model(cls, model: BookResearch) -> typing.Self:
         return cls(
+            id=str(model.id),
             provided_title=model.provided_title,
             provided_other_info=model.provided_other_info,
             research_output=model.research_output,
@@ -86,4 +88,19 @@ async def list_books(
     return BookListResponse(
         books=[BookResearchResponse.from_mongo_model(book) for book in books]
     )
+
+@router.delete("/delete_book/{book_id}")
+async def delete_book(
+    book_id: str
+):
+    """Delete a book by its MongoDB document ID."""
+    await init_beanie_models()
+    try:
+        book = await BookResearch.get(book_id)
+        if not book:
+            raise HTTPException(status_code=404, detail="Book not found")
+        await book.delete()
+        return {"message": "Book deleted successfully", "deleted_id": book_id}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error deleting book: {str(e)}")
 

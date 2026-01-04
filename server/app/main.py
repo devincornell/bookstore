@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 #from app.api.endpoints.books import router as books_router
 from app.api.endpoints.book_research import router as research_router  # Re-enabled with google-genai
 from app.core.config import app_settings
@@ -12,6 +14,9 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Configure templates
+templates = Jinja2Templates(directory="templates")
 
 # Add CORS middleware
 app.add_middleware(
@@ -43,6 +48,11 @@ def read_root():
         "docs": "/docs",
         "redoc": "/redoc"
     }
+
+@app.get("/bookstore", response_class=HTMLResponse)
+async def bookstore_frontend(request: Request):
+    """Serve the bookstore frontend HTML page"""
+    return templates.TemplateResponse("bookstore.html", {"request": request})
 
 @app.get("/health")
 def health_check():

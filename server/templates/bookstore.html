@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore Research</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #2c3e50;
+            font-size: 2.5rem;
+        }
+
+        .section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            padding: 2rem;
+        }
+
+        .section h2 {
+            color: #3498db;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        /* Research Form Styles */
+        .research-form {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        input[type="text"],
+        textarea {
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: #3498db;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        /* Loading States */
+        .loading {
+            text-align: center;
+            color: #3498db;
+            font-style: italic;
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #fadbd8;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .success {
+            color: #27ae60;
+            background: #d5f4e6;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        /* Book Cards Grid */
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .book-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .book-card h3 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .book-meta {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .book-description {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .expand-btn {
+            background: #e8f4f8;
+            color: #3498db;
+            border: 1px solid #3498db;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .expand-btn:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #fff;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            margin-left: 0.5rem;
+        }
+
+        .delete-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .book-details {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .book-details.expanded {
+            display: block;
+        }
+
+        .detail-section {
+            margin-bottom: 1rem;
+        }
+
+        .detail-section h4 {
+            color: #3498db;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .detail-list {
+            list-style-position: inside;
+            margin-left: 1rem;
+        }
+
+        .detail-list li {
+            margin-bottom: 0.3rem;
+        }
+
+        .rating-badge {
+            display: inline-block;
+            background: #f39c12;
+            color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin: 0.2rem;
+        }
+
+        .genre-tag {
+            display: inline-block;
+            background: #9b59b6;
+            color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin: 0.2rem;
+        }
+
+        .source-link {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .source-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .books-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Bookstore Research</h1>
+        
+        <!-- Research Form Section -->
+        <div class="section">
+            <h2>🔍 Research a New Book</h2>
+            <form id="researchForm" class="research-form">
+                <div class="form-group">
+                    <label for="bookTitle">Book Title *</label>
+                    <input 
+                        type="text" 
+                        id="bookTitle" 
+                        name="title" 
+                        required 
+                        placeholder="Enter the book title..."
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="otherInfo">Additional Information</label>
+                    <textarea 
+                        id="otherInfo" 
+                        name="other_info" 
+                        placeholder="Author, publication year, or any other helpful details..."
+                    ></textarea>
+                </div>
+                <button type="submit" class="btn" id="researchBtn">
+                    Research Book
+                </button>
+            </form>
+            <div id="researchStatus"></div>
+        </div>
+        
+        <!-- Books List Section -->
+        <div class="section">
+            <h2>📖 Researched Books</h2>
+            <button onclick="loadBooks()" class="btn" style="margin-bottom: 1rem;">
+                🔄 Refresh Books
+            </button>
+            <div id="booksContainer">
+                <div class="loading">Loading books...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API base URL
+        const API_BASE = window.location.origin;
+
+        // DOM elements
+        const researchForm = document.getElementById('researchForm');
+        const researchBtn = document.getElementById('researchBtn');
+        const researchStatus = document.getElementById('researchStatus');
+        const booksContainer = document.getElementById('booksContainer');
+
+        // Research form submission
+        researchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await researchBook();
+        });
+
+        // Research a book
+        async function researchBook() {
+            const formData = new FormData(researchForm);
+            const data = {
+                title: formData.get('title'),
+                other_info: formData.get('other_info') || null
+            };
+
+            // Show loading state
+            researchBtn.disabled = true;
+            researchBtn.textContent = 'Researching...';
+            researchStatus.innerHTML = '<div class="loading">🔍 Researching book... This may take a minute.</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/research/research_and_insert`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                researchStatus.innerHTML = '<div class="success">✅ Book research completed successfully!</div>';
+                
+                // Clear form
+                researchForm.reset();
+                
+                // Reload books to show the new research
+                await loadBooks();
+
+            } catch (error) {
+                console.error('Research error:', error);
+                researchStatus.innerHTML = `<div class="error">❌ Error researching book: ${error.message}</div>`;
+            } finally {
+                researchBtn.disabled = false;
+                researchBtn.textContent = 'Research Book';
+            }
+        }
+
+        // Load all books
+        async function loadBooks() {
+            booksContainer.innerHTML = '<div class="loading">Loading books...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/research/list_books`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayBooks(data.books);
+
+            } catch (error) {
+                console.error('Load books error:', error);
+                booksContainer.innerHTML = `<div class="error">❌ Error loading books: ${error.message}</div>`;
+            }
+        }
+
+        // Display books in cards
+        function displayBooks(books) {
+            if (!books || books.length === 0) {
+                booksContainer.innerHTML = '<div class="loading">No books found. Research your first book above!</div>';
+                return;
+            }
+
+            const booksGrid = document.createElement('div');
+            booksGrid.className = 'books-grid';
+
+            books.forEach((book, index) => {
+                const bookCard = createBookCard(book, index);
+                booksGrid.appendChild(bookCard);
+            });
+
+            booksContainer.innerHTML = '';
+            booksContainer.appendChild(booksGrid);
+        }
+
+        // Create a book card element
+        function createBookCard(book, index) {
+            const research = book.research_output;
+            const info = research.info;
+
+            const card = document.createElement('div');
+            card.className = 'book-card';
+
+            card.innerHTML = `
+                <h3>${info.title}</h3>
+                <div class="book-meta">
+                    <strong>Authors:</strong> ${info.authors.join(', ')}<br>
+                    <strong>Published:</strong> ${info.publication_year}<br>
+                    <strong>ISBN:</strong> ${info.isbn}
+                </div>
+                
+                <div class="book-description">
+                    <p>${info.description.length > 300 ? info.description.substring(0, 300) + '...' : info.description}</p>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    ${info.genres.map(genre => `<span class="genre-tag">${genre}</span>`).join('')}
+                </div>
+
+                <div class="button-group">
+                    <button class="expand-btn" onclick="toggleDetails('details-${index}', this)">
+                        Show Details
+                    </button>
+                    <button class="delete-btn" onclick="deleteBook('${book.id}', this)">
+                        🗑️ Delete
+                    </button>
+                </div>
+
+                <div id="details-${index}" class="book-details">
+                    ${createBookDetails(info, research.sources)}
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Create detailed book information
+        function createBookDetails(info, sources) {
+            const seriesInfo = info.series_title !== 'Standalone' ? `
+                <div class="detail-section">
+                    <h4>📚 Series Information</h4>
+                    <p><strong>Series:</strong> ${info.series_title}</p>
+                    <p><strong>Entry Number:</strong> ${info.series_entry_number}</p>
+                    <p><strong>Description:</strong> ${info.series_description}</p>
+                    ${info.other_series_entries.length > 0 ? `
+                        <p><strong>Other books in series:</strong></p>
+                        <ul class="detail-list">
+                            ${info.other_series_entries.map(entry => `<li>${entry}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                </div>
+            ` : '';
+
+            const ratingsSection = info.ratings.length > 0 ? `
+                <div class="detail-section">
+                    <h4>⭐ Ratings & Reception</h4>
+                    <div>
+                        ${info.ratings.map(rating => `<span class="rating-badge">${rating}</span>`).join('')}
+                    </div>
+                    <p><strong>Critical Consensus:</strong> ${info.critical_consensus}</p>
+                    <p><strong>Reception Overview:</strong> ${info.reception_overview}</p>
+                </div>
+            ` : '';
+
+            const awardsSection = info.awards.length > 0 ? `
+                <div class="detail-section">
+                    <h4>🏆 Awards</h4>
+                    <ul class="detail-list">
+                        ${info.awards.map(award => `<li>${award}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : '';
+
+            return `
+                <div class="detail-section">
+                    <h4>📊 Book Details</h4>
+                    <p><strong>Pages:</strong> ${info.page_count} | <strong>Words:</strong> ${info.word_count.toLocaleString()}</p>
+                    <p><strong>Emotional Tone:</strong> ${info.emotional_tone}</p>
+                    <p><strong>Reading Difficulty:</strong> ${info.reading_difficulty}</p>
+                    <p><strong>Target Audience:</strong> ${info.target_audience}</p>
+                    <p><strong>Content Rating:</strong> ${info.spicy_rating}</p>
+                    ${info.content_warnings ? `<p><strong>Content Warnings:</strong> ${info.content_warnings}</p>` : ''}
+                </div>
+
+                <div class="detail-section">
+                    <h4>✍️ Writing Style</h4>
+                    <p><strong>Style:</strong> ${info.general_style}</p>
+                    <p><strong>Narrative POV:</strong> ${info.narrative_pov}</p>
+                    <p><strong>Pacing:</strong> ${info.pacing}</p>
+                </div>
+
+                <div class="detail-section">
+                    <h4>🌍 Setting & Context</h4>
+                    <p><strong>Setting:</strong> ${info.setting_time_place}</p>
+                    <p><strong>Similar Works:</strong> ${info.similar_works.join(', ')}</p>
+                    ${info.frequently_compared_to.length > 0 ? `<p><strong>Frequently Compared To:</strong> ${info.frequently_compared_to.join(', ')}</p>` : ''}
+                </div>
+
+                ${seriesInfo}
+                ${ratingsSection}
+                ${awardsSection}
+
+                <div class="detail-section">
+                    <h4>👤 Author Information</h4>
+                    <p>${info.author_background}</p>
+                    ${info.author_other_works.length > 0 ? `
+                        <p><strong>Other Notable Works:</strong></p>
+                        <ul class="detail-list">
+                            ${info.author_other_works.map(work => `<li>${work}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                </div>
+
+                ${sources.length > 0 ? `
+                    <div class="detail-section">
+                        <h4>🔗 Research Sources</h4>
+                        <ul class="detail-list">
+                            ${sources.map(source => `<li><a href="${source.url}" target="_blank" class="source-link">${source.name}</a></li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // Toggle book details visibility
+        function toggleDetails(detailsId, button) {
+            const details = document.getElementById(detailsId);
+            const isExpanded = details.classList.contains('expanded');
+            
+            if (isExpanded) {
+                details.classList.remove('expanded');
+                button.textContent = 'Show Details';
+            } else {
+                details.classList.add('expanded');
+                button.textContent = 'Hide Details';
+            }
+        }
+
+        // Delete a book
+        async function deleteBook(bookId, button) {
+            if (!confirm('Are you sure you want to delete this book? This action cannot be undone.')) {
+                return;
+            }
+
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Deleting...';
+
+            try {
+                const response = await fetch(`${API_BASE}/research/delete_book/${bookId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to delete book');
+                }
+
+                // Remove the book card from the DOM
+                const bookCard = button.closest('.book-card');
+                bookCard.style.transition = 'all 0.3s ease';
+                bookCard.style.transform = 'scale(0.8)';
+                bookCard.style.opacity = '0';
+                
+                setTimeout(() => {
+                    bookCard.remove();
+                    // If no books left, show the no books message
+                    const booksGrid = document.querySelector('.books-grid');
+                    if (booksGrid && booksGrid.children.length === 0) {
+                        booksContainer.innerHTML = '<div class="loading">No books found. Research your first book above!</div>';
+                    }
+                }, 300);
+
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert(`Error deleting book: ${error.message}`);
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+
+        // Load books on page load
+        document.addEventListener('DOMContentLoaded', loadBooks);
+    </script>
+</body>
+</html>
