@@ -150,10 +150,10 @@ class BookResearchService(BaseClientService):
         client = genai.Client(api_key=api_key)
         return cls(client=client, **kwargs)
     
-    def research_book(self, title: str, other_info: str|None) -> BookResearchOutput:
+    async def research_book(self, title: str, other_info: str|None) -> BookResearchOutput:
         """Perform comprehensive research on a book and return structured info"""
-        research_output, sources = self._search_book_info(title=title, other_info=other_info)
-        structured_info = self._structure_book_info(research_output=research_output)
+        research_output, sources = await self._search_book_info(title=title, other_info=other_info)
+        structured_info = await self._structure_book_info(research_output=research_output)
         return BookResearchOutput(
             info=structured_info,
             sources=sources,
@@ -161,9 +161,9 @@ class BookResearchService(BaseClientService):
             provided_other_info=other_info
         )
     
-    def _structure_book_info(self, research_output: str) -> BookResearchInfo:
+    async def _structure_book_info(self, research_output: str) -> BookResearchInfo:
         """Structure the research output into BookResearchInfo dataclass"""
-        response = self.client.models.generate_content(
+        response = await self.client.models.generate_content_async(
             model=self.structure_model,
             contents=self.structure_prompt.format(research_output=research_output),
             config=types.GenerateContentConfig(
@@ -173,9 +173,9 @@ class BookResearchService(BaseClientService):
         )
         return response.parsed
 
-    def _search_book_info(self, title: str, other_info: str|None) -> tuple[str, list[ResearchSource]]:
+    async def _search_book_info(self, title: str, other_info: str|None) -> tuple[str, list[ResearchSource]]:
         """Search for book information using Google GenAI"""
-        response = self.client.models.generate_content(
+        response = await self.client.models.generate_content_async(
             model=self.search_model,
             contents=self.search_prompt.format(title=title, other_info=other_info),
             config=types.GenerateContentConfig(

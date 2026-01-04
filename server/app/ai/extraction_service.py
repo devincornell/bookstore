@@ -36,9 +36,9 @@ class BookExtractionService(BaseClientService):
         "source showing book information. Organize the extracted information into a structured JSON format."
     )
     
-    def extract_books(self, book_list_unstructured: str) -> BookExtractionOutput:
+    async def extract_books(self, book_list_unstructured: str) -> BookExtractionOutput:
         """Generate book recommendations based on criteria and a list of books"""
-        response = self.client.models.generate_content(
+        response = await self.client.models.generate_content_async(
             model=self.text_input_model,
             contents=self.text_input_prompt.format(book_list_text=book_list_unstructured),
             config=types.GenerateContentConfig(
@@ -48,12 +48,12 @@ class BookExtractionService(BaseClientService):
         )
         return response.parsed
     
-    def extract_books_from_image(self, image_data: bytes, mime_type: str = "image/jpeg") -> BookExtractionOutput:
+    async def extract_books_from_image(self, image_data: bytes, mime_type: str = "image/jpeg") -> BookExtractionOutput:
         """Extract book information from an image containing book titles, covers, or lists"""
         # Create the image part for multimodal input
         image_part = types.Part.from_bytes(data=image_data, mime_type=mime_type)
         
-        response = self.client.models.generate_content(
+        response = await self.client.models.generate_content_async(
             model=self.image_input_model,
             contents=[
                 self.image_input_prompt,
