@@ -102,6 +102,8 @@ class BookResearch(beanie.Document):
             },
             {
                 "$project": {
+                    "_id": 0,
+                    "book": "$$ROOT",
                     "similarity": {"$meta": "vectorSearchScore"}
                 }
             }
@@ -109,7 +111,8 @@ class BookResearch(beanie.Document):
         # The 'projection_model' makes this elegant by returning Pydantic objects
         return await cls.aggregate(pipeline, projection_model=BookResearchWithSimilarity).to_list()
     
-class BookResearchWithSimilarity(BookResearch):
+class BookResearchWithSimilarity(BaseModel):
+    book: BookResearchInfo = pydantic.Field(description="The researched book document")
     similarity: float = pydantic.Field(description="Similarity score from vector search")
 
 
