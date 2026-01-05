@@ -9,14 +9,14 @@ from .base_client_service import BaseClientService
 
 @dataclasses.dataclass
 class EmbeddingService(BaseClientService):
-    embedding_model: str = "embed-gecko-001"
+    embedding_model: str = "text-embedding-004"  # Latest model with improved performance
 
-    def generate_embedding(
+    async def generate_embedding(
         self,
         text: str,
     ) -> list[float]:
         """Generate embedding for the given text"""
-        response = self.client.models.embed_content(
+        response = await self.client.aio.models.embed_content(
             model=self.embedding_model,
             contents=[text],
         )

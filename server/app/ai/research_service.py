@@ -4,12 +4,11 @@ from importlib.metadata import metadata
 import pydantic
 from google import genai
 from google.genai import types
-from .base_client_service import BaseClientService
 
+from .base_client_service import BaseClientService
+from .embedding_service import EmbeddingService
 
 class BookResearchOutput(pydantic.BaseModel):
-    provided_title: str = pydantic.Field(description="The title of the book as provided in the research request")
-    provided_other_info: str|None = pydantic.Field(description="Other information about the book as provided in the research request. Could include author, publication date, etc.")
     info: BookResearchInfo = pydantic.Field(description="Comprehensive researched information about the book")
     sources: list[ResearchSource] = pydantic.Field(description="List of unique source URLs and their titles used in the research")
 
@@ -157,8 +156,6 @@ class BookResearchService(BaseClientService):
         return BookResearchOutput(
             info=structured_info,
             sources=sources,
-            provided_title=title,
-            provided_other_info=other_info
         )
     
     async def _structure_book_info(self, research_output: str) -> BookResearchInfo:
