@@ -8,14 +8,14 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from pydantic import BaseModel, Field
 
-from dotenv import load_dotenv
-import os
-load_dotenv()
+#from dotenv import load_dotenv
+#import os
+#load_dotenv()
 
 from app.core.config import app_settings
 #from app.database import get_db
 #from app.models import BookStoreDB
-from app.mongo_models import BookResearch, init_beanie_models, ResearchTask, TaskStatusEnum
+from app.mongo_models import BookResearch, init_beanie_models, ResearchTask, TaskStatusEnum, BookResearchWithSimilarity
 from app.ai import (
     BookResearchService, 
     BookResearchOutput, 
@@ -24,12 +24,10 @@ from app.ai import (
     BookRecommendOutput,
     BookExtractionService,
     BookExtractionOutput,
+    AIServices,
 )
 
-research_service = BookResearchService.from_api_key(app_settings.GOOGLE_API_KEY)
-recommend_service = BookRecommendService.from_api_key(app_settings.GOOGLE_API_KEY)
-
-
+ai_services = AIServices.from_api_key(app_settings.GOOGLE_API_KEY)
 
 router = APIRouter()
 
@@ -40,7 +38,7 @@ async def books_recommend(
 ) -> BookRecommendOutput:
     await init_beanie_models()
     books = await BookResearch.find_all().to_list()
-    return await recommend_service.recommend_books(
+    return await ai_services.recommend.recommend_books(
         recommend_criteria=recommend_criteria,
         book_info=[br.research_output.info for br in books],
     )
@@ -55,6 +53,22 @@ class BookInfoResponse(BaseModel):
             id=str(book_research.id),
             info=book_research.research_output.info
         )
+
+
+class BookWithSimilarityListResponse(BaseModel):
+    books: list[BookResearchWithSimilarity] = pydantic.Field(description="List of researched books with similarity scores")
+
+@router.get("/search", response_model=BookWithSimilarityListResponse)
+async def books_list(
+    q: str = Query(..., description="Text query to search for similar books"),
+    top_n: int = Query(5, description="Number of top similar books to return"),
+) -> BookWithSimilarityListResponse:
+    await init_beanie_models()
+    query_vector = await ai_services.embedding.generate_embedding(q)
+    books = await BookResearch.vector_similarity(query_vector=query_vector, limit=top_n)
+    return BookWithSimilarityListResponse(
+        books=books
+    )
 
 class BookListResponse(BaseModel):
     books: list[BookInfoResponse] = pydantic.Field(description="List of researched books")
@@ -82,5 +96,13 @@ async def books_delete(
         return {"message": "Book deleted successfully", "deleted_id": book_id}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error deleting book: {str(e)}")
+
+@router.get("/clear")
+async def books_clear(
+) -> bool:
+    await init_beanie_models()
+    await BookResearch.delete_all()
+    return True
+
 
 

@@ -1,4 +1,4 @@
-from .book_research import BookResearch
+from .book_research import BookResearch, BookResearchWithSimilarity
 from .research_task import ResearchTask, TaskStatusEnum
 
 from .models import (

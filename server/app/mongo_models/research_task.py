@@ -8,7 +8,7 @@ import pydantic
 import pymongo
 import pymongo.errors
 import asyncio
-from motor.motor_asyncio import AsyncIOMotorClient
+#from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 import os
 import typing

@@ -8,9 +8,6 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from pydantic import BaseModel, Field
 
-from dotenv import load_dotenv
-import os
-load_dotenv()
 
 from app.core.config import app_settings
 #from app.database import get_db
@@ -24,15 +21,14 @@ from app.ai import (
     BookRecommendOutput,
     BookExtractionService,
     BookExtractionOutput,
+    EmbeddingService,
+    AIServices,
 )
 
-research_service = BookResearchService.from_api_key(app_settings.GOOGLE_API_KEY)
-recommend_service = BookRecommendService.from_api_key(app_settings.GOOGLE_API_KEY)
-
+ai_services = AIServices.from_api_key(app_settings.GOOGLE_API_KEY)
 
 
 router = APIRouter()
-
 
 class SingleBookResearchRequest(BaseModel):
     title: str = Field(..., description="Book title to research")
@@ -68,15 +64,17 @@ async def background_task_research(
 ) -> None:
     """Background task to research a single book and save to database"""
     try:
-        research_output = await research_service.research_book(
+        research_output = await ai_services.research.research_book(
             title=research_request.title,
             other_info=research_request.other_info,
         )
+        embedding = await ai_services.embedding.generate_embedding(research_output.info.as_string())
         await init_beanie_models()
         await BookResearch.insert_book(
+            research_output=research_output,
+            embedding=embedding,
             provided_title=research_request.title,
             provided_other_info=research_request.other_info,
-            research_output=research_output,
         )
         task.status = TaskStatusEnum.SUCCESS
         await task.save()
@@ -90,7 +88,7 @@ async def background_task_research(
 async def research_and_insert(
     request: SingleBookResearchRequest,
 ) -> BookResearch:
-    research_output = await research_service.research_book(
+    research_output = await ai_services.research.research_book(
         title=request.title,
         other_info=request.other_info,
     )
@@ -108,7 +106,7 @@ async def research(
     other_info: Optional[str] = Query(None, description="Other information about the book"),
 ):
     '''Perform book research without saving to database.'''
-    research_output = await research_service.research_book(
+    research_output = await ai_services.research.research_book(
         title=title,
         other_info=other_info,
     )
