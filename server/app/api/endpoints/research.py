@@ -164,5 +164,14 @@ async def research_tasks_clear(
     tasks = await ResearchTask.delete_all()
     return True
 
-
+@router.delete("/tasks/delete/{task_id}")
+async def research_task_delete(
+    task_id: str
+) -> bool:
+    await init_beanie_models()
+    task = await ResearchTask.get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Research task not found")
+    await task.delete()
+    return True
 
