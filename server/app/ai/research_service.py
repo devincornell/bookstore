@@ -17,31 +17,36 @@ class ResearchSource(pydantic.BaseModel):
     url: str = pydantic.Field(description="The URL of the source")
 
 class BookResearchInfo(pydantic.BaseModel):
-    title: str = pydantic.Field(description="The full title of the book")
-    authors: list[str] = pydantic.Field(description="The authors' names")
+    title: str = pydantic.Field(description="The full standard title of the book, not including subtitle or information about the series.")
+    authors: list[str] = pydantic.Field(description="The authors' names. Not pen initials, and names should be in order - don't do 'last name, first name' format)")
     publication_year: int = pydantic.Field(description="The year the book was published")
     isbn: str = pydantic.Field(description="The ISBN number (10 or 13 digits)")
     
     # series information
     series_title: str = pydantic.Field(description="If the book is part of a series, the series title, else 'Standalone'")
+    series_entry_number: int = pydantic.Field(description="If part of a series, the book's entry number in the series, else provide no number.")
     series_description: str = pydantic.Field(description="If part of a series, a brief description of the series, else provide no description.")
-    series_entry_number: str = pydantic.Field(description="If part of a series, the book's entry number in the series, else provide no number.")
     other_series_entries: list[str] = pydantic.Field(description="Other books in the series with their titles, entry numbers, and publication years if applicable, else provide no entries.")
 
-    # receptiion
+    # reception by critics
     awards: list[str] = pydantic.Field(description="List of any awards the book has won, else provide an empty list")
-    ratings: list[str] = pydantic.Field(description="List of ratings from major review sources, else provide an empty list")
     bestseller_lists: list[str] = pydantic.Field(description="List of any bestseller lists the book has appeared on, else provide an empty list")
-    review_quotes: list[str] = pydantic.Field(description="Notable quotes from critic and user reviews.")
+    critical_quotes: list[str] = pydantic.Field(description="Critical quotes from professional critics.")
+    positive_quotes: list[str] = pydantic.Field(description="Positive quotes from critics.")
     critical_consensus: str = pydantic.Field(description="What critics generally agree about the book")
-    reception_overview: str = pydantic.Field(description="Overall summary of the critical reception of the book")
+
+    # receptiion by users
+    user_ratings: list[str] = pydantic.Field(description="List of ratings from major review sources. Follow the format 4.4/5 on Goodreads, 4.6/5 on Amazon, etc. Don't add extra text.")
+    user_quotes: list[str] = pydantic.Field(description="Notable quotes from critic and user reviews.")
+    user_reception: str = pydantic.Field(description="Overall summary of the user reception of the book")
 
     # content
     page_count: int = pydantic.Field(description="Approximate number of pages")
     word_count: int = pydantic.Field(description="Approximate word count of the book")
+    genres: list[str] = pydantic.Field(description="List of genres that the book belongs to. All genres should be lower-case.")
     description: str = pydantic.Field(description="A description or summary of the book")
     emotional_tone: str = pydantic.Field(description="Overall emotional tone: dark, uplifting, melancholy, humorous, etc.")
-    spicy_rating: str = pydantic.Field(description="Content spicyness rating (e.g., None, Mild, Moderate, Hot, Extra Hot).")
+    spicy_rating: str = pydantic.Field(description="Content spicyness rating in number of chilly peppers ranging from 0 (clean) to 5 (explicit),")
     content_warnings: str = pydantic.Field(description="Content warnings: violence, sexual content, trauma, etc.")
     target_audience: str = pydantic.Field(description="Age range, content appropriateness, and intended audience")
     reader_demographics: str = pydantic.Field(description="Typical reader demographics who enjoy this book")
@@ -53,8 +58,8 @@ class BookResearchInfo(pydantic.BaseModel):
     reading_difficulty: str = pydantic.Field(description="Reading level: easy, moderate, challenging, or academic")
     narrative_pov: str = pydantic.Field(description="Narrative point of view: first person, third person limited, omniscient, etc.")
 
-    # context
-    genres: list[str] = pydantic.Field(description="List of genres that the book belongs to.")
+    # other works
+    
     similar_works: list[str] = pydantic.Field(description="Other books, articles, or works that are similar")
     frequently_compared_to: list[str] = pydantic.Field(description="Books frequently compared to this one")
 
