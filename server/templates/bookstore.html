@@ -229,7 +229,6 @@
             font-size: 0.85rem;
             padding: 0.4rem 0.8rem;
         }
-        }
 
         .delete-btn {
             background: #fff;
@@ -352,12 +351,14 @@
 
         .genre-tag {
             display: inline-block;
-            background: #9b59b6;
-            color: white;
-            padding: 0.3rem 0.6rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            margin: 0.2rem;
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #e9ecef;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin: 0.15rem;
+            font-weight: 500;
         }
 
         .source-link {
@@ -1186,21 +1187,24 @@
                 <div class="book-card-content">
                     <div class="book-card-left">
                         <h3>${info.title}</h3>
+                        ${info.series_title && info.series_title !== 'Standalone' ? `
+                            <div style="color: #9b59b6; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">
+                                ${info.series_title}${info.series_entry_number ? ` #${info.series_entry_number}` : ''}
+                            </div>
+                        ` : ''}
                         <div class="book-meta">
                             <strong>Authors:</strong> ${Array.isArray(info.authors) ? info.authors.join(', ') : info.authors}<br>
-                            <strong>Published:</strong> ${info.publication_year}<br>
-                            <strong>ISBN:</strong> ${info.isbn}
+                            <strong>Published:</strong> ${info.publication_year}
                         </div>
                     </div>
                     <div class="book-card-right">
                         <div class="book-description">
-                            ${info.description.length > 400 ? info.description.substring(0, 400) + '...' : info.description}
+                            ${info.description.length > 200 ? info.description.substring(0, 200) + '...' : info.description}
+                        </div>
+                        <div class="book-genres" style="margin-top: 0.75rem;">
+                            ${info.genres.map(genre => `<span class="genre-tag">${genre}</span>`).join('')}
                         </div>
                     </div>
-                </div>
-
-                <div class="book-genres">
-                    ${info.genres.map(genre => `<span class="genre-tag">${genre}</span>`).join('')}
                 </div>
 
                 <div class="button-group">
@@ -1226,7 +1230,6 @@
                 <!-- Series Information -->
                 ${info.series_title && info.series_title !== 'Standalone' ? `
                 <div id="${sectionId}-series" class="detail-content-section" style="display: none;">
-                    <h4 style="color: #3498db; margin-bottom: 1rem; font-size: 1.1rem;">📚 Series Information</h4>
                     <p><strong>Series:</strong> ${info.series_title}</p>
                     ${info.series_entry_number ? `<p><strong>Entry Number:</strong> ${info.series_entry_number}</p>` : ''}
                     ${info.series_description ? `<p><strong>Description:</strong> ${info.series_description}</p>` : ''}
@@ -1241,7 +1244,6 @@
 
                 <!-- Content Details -->
                 <div id="${sectionId}-content" class="detail-content-section" style="display: none;">
-                    <h4 style="color: #3498db; margin-bottom: 1rem; font-size: 1.1rem;">📄 Content Details</h4>
                     <p><strong>Description:</strong> ${info.description}</p>
                     <p><strong>Pages:</strong> ${info.page_count} | <strong>Words:</strong> ${info.word_count ? info.word_count.toLocaleString() : 'N/A'}</p>
                     <p><strong>Genres:</strong> ${info.genres ? info.genres.join(', ') : 'N/A'}</p>
@@ -1255,7 +1257,6 @@
 
                 <!-- Writing Style -->
                 <div id="${sectionId}-style" class="detail-content-section" style="display: none;">
-                    <h4 style="color: #3498db; margin-bottom: 1rem; font-size: 1.1rem;">✍️ Writing Style</h4>
                     <p><strong>General Style:</strong> ${info.general_style}</p>
                     <p><strong>Narrative POV:</strong> ${info.narrative_pov}</p>
                     <p><strong>Pacing:</strong> ${info.pacing}</p>
@@ -1265,7 +1266,6 @@
                 <!-- Critical Reception -->
                 ${(info.awards && info.awards.length > 0) || (info.bestseller_lists && info.bestseller_lists.length > 0) || info.critical_consensus || (info.critical_quotes && info.critical_quotes.length > 0) || (info.positive_quotes && info.positive_quotes.length > 0) ? `
                 <div id="${sectionId}-critics" class="detail-content-section" style="display: none;">
-                    <h4 style="color: #3498db; margin-bottom: 1rem; font-size: 1.1rem;">🏆 Critical Reception</h4>
                     ${info.awards && info.awards.length > 0 ? `
                         <p><strong>Awards:</strong></p>
                         <ul class="detail-list">
@@ -1297,7 +1297,6 @@
                 <!-- User Reception -->
                 ${(info.user_ratings && info.user_ratings.length > 0) || (info.user_quotes && info.user_quotes.length > 0) || info.user_reception || (info.ratings && info.ratings.length > 0) || (info.review_quotes && info.review_quotes.length > 0) ? `
                 <div id="${sectionId}-users" class="detail-content-section" style="display: none;">
-                    <h4 style="color: #3498db; margin-bottom: 1rem; font-size: 1.1rem;">⭐ User Reception</h4>
                     ${(info.user_ratings && info.user_ratings.length > 0) || (info.ratings && info.ratings.length > 0) ? `
                         <p><strong>Ratings:</strong></p>
                         <div style="margin-bottom: 0.75rem;">
@@ -1324,7 +1323,6 @@
                 <!-- Similar Works -->
                 ${(info.similar_works && info.similar_works.length > 0) || (info.frequently_compared_to && info.frequently_compared_to.length > 0) ? `
                 <div id="${sectionId}-similar" class="detail-content-section" style="display: none;">
-                    <h4 style="color: #3498db; margin-bottom: 1rem; font-size: 1.1rem;">🔗 Similar Works</h4>
                     ${info.similar_works && info.similar_works.length > 0 ? `<p><strong>Similar Works:</strong> ${info.similar_works.join(', ')}</p>` : ''}
                     ${info.frequently_compared_to && info.frequently_compared_to.length > 0 ? `<p><strong>Frequently Compared To:</strong> ${info.frequently_compared_to.join(', ')}</p>` : ''}
                 </div>
@@ -1333,7 +1331,6 @@
                 <!-- Author Information -->
                 ${info.author_background || (info.author_other_works && info.author_other_works.length > 0) || (info.author_other_series && info.author_other_series.length > 0) ? `
                 <div id="${sectionId}-author" class="detail-content-section" style="display: none;">
-                    <h4 style="color: #3498db; margin-bottom: 1rem; font-size: 1.1rem;">👤 Author Information</h4>
                     ${info.author_background ? `<p><strong>Background:</strong> ${info.author_background}</p>` : ''}
                     ${info.author_other_series && info.author_other_series.length > 0 ? `
                         <p><strong>Other Series:</strong></p>
