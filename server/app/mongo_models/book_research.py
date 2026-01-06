@@ -103,7 +103,7 @@ class BookResearch(beanie.Document):
             {
                 "$project": {
                     "_id": 0,
-                    "book": "$$ROOT",
+                    "book": "$research_output.info",
                     "similarity": {"$meta": "vectorSearchScore"}
                 }
             }
