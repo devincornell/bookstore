@@ -149,8 +149,8 @@
 
         /* Book Cards Grid */
         .books-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            display: flex;
+            flex-direction: column;
             gap: 1.5rem;
         }
 
@@ -167,6 +167,22 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         }
 
+        .book-card-content {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .book-card-left {
+            flex: 0 0 300px;
+            min-width: 0;
+        }
+
+        .book-card-right {
+            flex: 1;
+            min-width: 0;
+        }
+
         .book-card h3 {
             color: #2c3e50;
             margin-bottom: 0.5rem;
@@ -176,12 +192,16 @@
         .book-meta {
             color: #7f8c8d;
             font-size: 0.9rem;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
         }
 
         .book-description {
-            margin-bottom: 1rem;
             line-height: 1.6;
+            color: #555;
+        }
+
+        .book-genres {
+            margin-bottom: 1rem;
         }
 
         .expand-btn {
@@ -813,7 +833,16 @@
             }
             
             .books-grid {
-                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .book-card-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .book-card-left {
+                flex: none;
             }
         }
     </style>
@@ -1103,18 +1132,23 @@
             card.className = 'book-card';
 
             card.innerHTML = `
-                <h3>${info.title}</h3>
-                <div class="book-meta">
-                    <strong>Authors:</strong> ${Array.isArray(info.authors) ? info.authors.join(', ') : info.authors}<br>
-                    <strong>Published:</strong> ${info.publication_year}<br>
-                    <strong>ISBN:</strong> ${info.isbn}
-                </div>
-                
-                <div class="book-description">
-                    <p>${info.description.length > 300 ? info.description.substring(0, 300) + '...' : info.description}</p>
+                <div class="book-card-content">
+                    <div class="book-card-left">
+                        <h3>${info.title}</h3>
+                        <div class="book-meta">
+                            <strong>Authors:</strong> ${Array.isArray(info.authors) ? info.authors.join(', ') : info.authors}<br>
+                            <strong>Published:</strong> ${info.publication_year}<br>
+                            <strong>ISBN:</strong> ${info.isbn}
+                        </div>
+                    </div>
+                    <div class="book-card-right">
+                        <div class="book-description">
+                            ${info.description.length > 400 ? info.description.substring(0, 400) + '...' : info.description}
+                        </div>
+                    </div>
                 </div>
 
-                <div style="margin-bottom: 1rem;">
+                <div class="book-genres">
                     ${info.genres.map(genre => `<span class="genre-tag">${genre}</span>`).join('')}
                 </div>
 
