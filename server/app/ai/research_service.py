@@ -31,14 +31,14 @@ class BookResearchInfo(pydantic.BaseModel):
     # reception by critics
     awards: list[str] = pydantic.Field(description="List of any awards the book has won, else provide an empty list")
     bestseller_lists: list[str] = pydantic.Field(description="List of any bestseller lists the book has appeared on, else provide an empty list")
-    critical_quotes: list[str] = pydantic.Field(description="Critical quotes from professional critics.")
+    critical_quotes: list[str] = pydantic.Field(description="Negative critical quotes from professional critics. Quotes about the things that were not good.")
     positive_quotes: list[str] = pydantic.Field(description="Positive quotes from critics.")
     critical_consensus: str = pydantic.Field(description="What critics generally agree about the book")
 
     # receptiion by users
     user_ratings: list[str] = pydantic.Field(description="List of ratings from major review sources. Follow the format 4.4/5 on Goodreads, 4.6/5 on Amazon, etc. Don't add extra text.")
-    user_quotes: list[str] = pydantic.Field(description="Notable quotes from critic and user reviews.")
-    user_reception: str = pydantic.Field(description="Overall summary of the user reception of the book")
+    user_quotes: list[str] = pydantic.Field(description="Notable quotes from regular users - not critics, just regular users.")
+    user_reception: str = pydantic.Field(description="Overall summary of the user reception of the book - not critics, just regular users.")
 
     # content
     page_count: int = pydantic.Field(description="Approximate number of pages")
