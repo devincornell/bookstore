@@ -888,6 +888,48 @@
                 flex: none;
             }
         }
+
+        /* Search Box Styles */
+        .search-container {
+            position: relative;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 3rem 0.75rem 1rem;
+            border: 2px solid #e1e8ed;
+            border-radius: 25px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 4px 12px rgba(52,152,219,0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 1rem;
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            pointer-events: none;
+        }
+
+        .search-results {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
@@ -1028,6 +1070,21 @@
                     🔄 Refresh Books
                 </button>
             </div>
+            
+            <!-- Search Box -->
+            <div class="search-container" style="margin-bottom: 1.5rem;">
+                <div class="search-box">
+                    <input 
+                        type="text" 
+                        id="bookSearchInput" 
+                        placeholder="Search books by title, author, year, or series..." 
+                        class="search-input"
+                    />
+                    <div class="search-icon">🔍</div>
+                </div>
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            
             <div id="booksContainer">
                 <div class="loading">Loading books...</div>
             </div>
@@ -1061,6 +1118,7 @@
         const extractedBooksPreview = document.getElementById('extractedBooksPreview');
         const extractedBooksList = document.getElementById('extractedBooksList');
         const researchAllBtn = document.getElementById('researchAllBtn');
+        const bookSearchInput = document.getElementById('bookSearchInput');
 
         // Global variables
         let currentImageFile = null;
@@ -1068,6 +1126,8 @@
         let extractedBooks = [];
         let activeTasks = new Map(); // Track active tasks for polling
         let taskPollingInterval = null;
+        let allBooks = []; // Store all books for filtering
+        let filteredBooks = []; // Store filtered books
 
         // Recommendation form submission
         if (recommendationForm) {
@@ -1087,6 +1147,16 @@
             e.preventDefault();
             await extractBooksFromImage();
         });
+
+        // Search functionality
+        if (bookSearchInput) {
+            bookSearchInput.addEventListener('input', handleSearch);
+            bookSearchInput.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') {
+                    handleSearch();
+                }
+            });
+        }
 
         // Image upload area event listeners
         imageUploadArea.addEventListener('dragover', (e) => {
@@ -1141,7 +1211,10 @@
                 }
 
                 const data = await response.json();
-                displayBooks(data.books);
+                allBooks = data.books || [];
+                filteredBooks = allBooks; // Initialize filtered books
+                displayBooks(filteredBooks);
+                updateSearchResults();
 
             } catch (error) {
                 console.error('Load books error:', error);
@@ -1152,7 +1225,11 @@
         // Display books in cards
         function displayBooks(books) {
             if (!books || books.length === 0) {
-                booksContainer.innerHTML = '<div class="loading">No books found. Research your first book above!</div>';
+                if (allBooks.length === 0) {
+                    booksContainer.innerHTML = '<div class="loading">No books found. Research your first book above!</div>';
+                } else {
+                    booksContainer.innerHTML = '<div class="loading">No books match your search criteria. Try a different search term.</div>';
+                }
                 return;
             }
 
@@ -1166,6 +1243,44 @@
 
             booksContainer.innerHTML = '';
             booksContainer.appendChild(booksGrid);
+        }
+
+        // Handle search input
+        function handleSearch() {
+            const searchInput = document.getElementById('bookSearchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            
+            if (!searchTerm) {
+                filteredBooks = allBooks;
+            } else {
+                filteredBooks = allBooks.filter(book => {
+                    const info = book.info;
+                    return (
+                        info.title?.toLowerCase().includes(searchTerm) ||
+                        (Array.isArray(info.authors) ? info.authors.some(author => author.toLowerCase().includes(searchTerm)) : info.authors?.toLowerCase().includes(searchTerm)) ||
+                        info.publication_year?.toString().includes(searchTerm) ||
+                        info.series_title?.toLowerCase().includes(searchTerm)
+                    );
+                });
+            }
+            
+            displayBooks(filteredBooks);
+            updateSearchResults();
+        }
+
+        // Update search results summary
+        function updateSearchResults() {
+            const searchResults = document.getElementById('searchResults');
+            const searchInput = document.getElementById('bookSearchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            
+            if (!searchResults) return;
+            
+            if (!searchTerm) {
+                searchResults.innerHTML = `Showing all ${allBooks.length} books`;
+            } else {
+                searchResults.innerHTML = `Found ${filteredBooks.length} of ${allBooks.length} books matching "${searchTerm}"`;
+            }
         }
 
         // Create a book card element
