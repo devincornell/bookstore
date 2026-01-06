@@ -892,6 +892,22 @@
         /* Search Box Styles */
         .search-container {
             position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .search-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .search-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.25rem;
         }
 
         .search-box {
@@ -917,6 +933,11 @@
             box-shadow: 0 4px 12px rgba(52,152,219,0.15);
         }
 
+        .semantic-input:focus {
+            border-color: #9b59b6;
+            box-shadow: 0 4px 12px rgba(155,89,182,0.15);
+        }
+
         .search-icon {
             position: absolute;
             right: 1rem;
@@ -925,10 +946,112 @@
             pointer-events: none;
         }
 
+        .semantic-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .btn-semantic {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(155,89,182,0.2);
+        }
+
+        .btn-semantic:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(155,89,182,0.3);
+        }
+
+        .btn-semantic:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .btn-semantic-clear {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(127,140,141,0.2);
+        }
+
+        .btn-semantic-clear:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(127,140,141,0.3);
+        }
+
         .search-results {
             margin-top: 0.5rem;
             font-size: 0.9rem;
             color: #6c757d;
+        }
+
+        .semantic-result-item {
+            background: linear-gradient(135deg, #f8f5ff 0%, #f3f0ff 100%);
+            border: 1px solid #e1d4f7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .semantic-result-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(155,89,182,0.15);
+            border-color: #9b59b6;
+        }
+
+        .semantic-result-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.25rem;
+        }
+
+        .semantic-result-meta {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 0.5rem;
+        }
+
+        .semantic-result-description {
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .similarity-score {
+            background: #9b59b6;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        @media (max-width: 768px) {
+            .search-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
         }
     </style>
 </head>
@@ -1071,18 +1194,45 @@
                 </button>
             </div>
             
-            <!-- Search Box -->
+            <!-- Search Boxes -->
             <div class="search-container" style="margin-bottom: 1.5rem;">
-                <div class="search-box">
-                    <input 
-                        type="text" 
-                        id="bookSearchInput" 
-                        placeholder="Search books by title, author, year, or series..." 
-                        class="search-input"
-                    />
-                    <div class="search-icon">🔍</div>
+                <!-- Basic Text Search -->
+                <div class="search-section">
+                    <label class="search-label">📝 Filter Books</label>
+                    <div class="search-box">
+                        <input 
+                            type="text" 
+                            id="bookSearchInput" 
+                            placeholder="Filter by title, author, year, or series..." 
+                            class="search-input"
+                        />
+                        <div class="search-icon">🔍</div>
+                    </div>
+                    <div id="searchResults" class="search-results"></div>
                 </div>
-                <div id="searchResults" class="search-results"></div>
+                
+                <!-- Semantic Search -->
+                <div class="search-section">
+                    <label class="search-label">🧠 Semantic Search</label>
+                    <div class="search-box">
+                        <input 
+                            type="text" 
+                            id="semanticSearchInput" 
+                            placeholder="Describe what you're looking for (e.g., 'dark fantasy with magic')..." 
+                            class="search-input semantic-input"
+                        />
+                        <div class="search-icon">✨</div>
+                    </div>
+                    <div class="semantic-actions">
+                        <button id="semanticSearchBtn" class="btn-semantic" disabled>
+                            🔍 Search
+                        </button>
+                        <button id="clearSemanticBtn" class="btn-semantic-clear" style="display: none;">
+                            ✖️ Clear
+                        </button>
+                    </div>
+                    <div id="semanticSearchResults" class="search-results"></div>
+                </div>
             </div>
             
             <div id="booksContainer">
@@ -1119,6 +1269,9 @@
         const extractedBooksList = document.getElementById('extractedBooksList');
         const researchAllBtn = document.getElementById('researchAllBtn');
         const bookSearchInput = document.getElementById('bookSearchInput');
+        const semanticSearchInput = document.getElementById('semanticSearchInput');
+        const semanticSearchBtn = document.getElementById('semanticSearchBtn');
+        const clearSemanticBtn = document.getElementById('clearSemanticBtn');
 
         // Global variables
         let currentImageFile = null;
@@ -1128,6 +1281,8 @@
         let taskPollingInterval = null;
         let allBooks = []; // Store all books for filtering
         let filteredBooks = []; // Store filtered books
+        let semanticResults = []; // Store semantic search results
+        let isSemanticSearchActive = false;
 
         // Recommendation form submission
         if (recommendationForm) {
@@ -1156,6 +1311,26 @@
                     handleSearch();
                 }
             });
+        }
+
+        // Semantic search functionality
+        if (semanticSearchInput && semanticSearchBtn) {
+            semanticSearchInput.addEventListener('input', (e) => {
+                const hasText = e.target.value.trim().length > 0;
+                semanticSearchBtn.disabled = !hasText;
+            });
+
+            semanticSearchInput.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter' && !semanticSearchBtn.disabled) {
+                    handleSemanticSearch();
+                }
+            });
+
+            semanticSearchBtn.addEventListener('click', handleSemanticSearch);
+        }
+
+        if (clearSemanticBtn) {
+            clearSemanticBtn.addEventListener('click', clearSemanticSearch);
         }
 
         // Image upload area event listeners
@@ -1250,6 +1425,12 @@
             const searchInput = document.getElementById('bookSearchInput');
             const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
             
+            // Clear semantic search if basic search is used
+            if (searchTerm && isSemanticSearchActive) {
+                clearSemanticSearch();
+                return; // clearSemanticSearch will call handleSearch again
+            }
+            
             if (!searchTerm) {
                 filteredBooks = allBooks;
             } else {
@@ -1276,18 +1457,129 @@
             
             if (!searchResults) return;
             
-            if (!searchTerm) {
+            if (isSemanticSearchActive) {
+                searchResults.innerHTML = `Showing semantic search results`;
+            } else if (!searchTerm) {
                 searchResults.innerHTML = `Showing all ${allBooks.length} books`;
             } else {
                 searchResults.innerHTML = `Found ${filteredBooks.length} of ${allBooks.length} books matching "${searchTerm}"`;
             }
         }
 
+        // Handle semantic search
+        async function handleSemanticSearch() {
+            const searchInput = document.getElementById('semanticSearchInput');
+            const searchBtn = document.getElementById('semanticSearchBtn');
+            const clearBtn = document.getElementById('clearSemanticBtn');
+            const resultsDiv = document.getElementById('semanticSearchResults');
+            
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            // Update UI state
+            searchBtn.disabled = true;
+            searchBtn.textContent = '🔍 Searching...';
+            resultsDiv.innerHTML = '<div class="loading">🧠 Finding semantically similar books...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/books/search?q=${encodeURIComponent(query)}&top_n=10`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                semanticResults = data.books || [];
+                
+                console.log('✅ Semantic search successful:', data.books?.length || 0, 'books found');
+                
+                displaySemanticResults();
+                
+                // Show semantic results in main area - handle BookResearchWithSimilarity structure
+                isSemanticSearchActive = true;
+                const booksForDisplay = semanticResults.map((item, idx) => {
+                    // Based on API response structure: each item has { book: {...}, similarity: 0.xx }
+                    const bookInfo = item.book; // The actual book data is in the 'book' property
+                    
+                    return {
+                        id: `semantic-${idx}`, 
+                        info: bookInfo,
+                        similarity: item.similarity || 0
+                    };
+                });
+                
+                console.log('Books for display:', booksForDisplay); // Debug log
+                displayBooks(booksForDisplay);
+                updateSearchResults();
+                
+                // Update UI
+                clearBtn.style.display = 'inline-block';
+                resultsDiv.innerHTML = `Found ${semanticResults.length} semantically similar books`;
+
+            } catch (error) {
+                console.error('Semantic search error:', error);
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = '🔍 Search';
+            }
+        }
+
+        // Display semantic search results
+        function displaySemanticResults() {
+            // Results are displayed in the main books area via displayBooks()
+            // This function could be extended for additional semantic result UI
+        }
+
+        // Clear semantic search
+        function clearSemanticSearch() {
+            const searchInput = document.getElementById('semanticSearchInput');
+            const searchBtn = document.getElementById('semanticSearchBtn');
+            const clearBtn = document.getElementById('clearSemanticBtn');
+            const resultsDiv = document.getElementById('semanticSearchResults');
+            
+            // Reset form
+            searchInput.value = '';
+            searchBtn.disabled = true;
+            clearBtn.style.display = 'none';
+            resultsDiv.innerHTML = '';
+            
+            // Clear semantic results and return to normal view
+            semanticResults = [];
+            isSemanticSearchActive = false;
+            
+            // Show filtered results or all books
+            const basicSearchTerm = document.getElementById('bookSearchInput')?.value.trim();
+            if (basicSearchTerm) {
+                handleSearch(); // Re-run basic search
+            } else {
+                displayBooks(allBooks);
+                updateSearchResults();
+            }
+        }
+
         // Create a book card element
         function createBookCard(book, index) {
             const info = book.info; // Now book has id and info properties
+            
+            // Safety check for info object
+            if (!info || !info.title) {
+                const errorCard = document.createElement('div');
+                errorCard.className = 'book-card';
+                errorCard.innerHTML = `
+                    <div class="error">
+                        ❌ Error: Book information incomplete
+                    </div>`;
+                return errorCard;
+            }
+            
             const card = document.createElement('div');
             card.className = 'book-card';
+
+            // Check if this is from semantic search results
+            const isSemanticResult = book.similarity !== undefined;
+            const similarityBadge = isSemanticResult ? 
+                `<div class="similarity-score">${Math.round(book.similarity * 100)}% match</div>` : '';
 
             // Generate section buttons based on available data
             const availableSections = [];
@@ -1330,7 +1622,7 @@
             card.innerHTML = `
                 <div class="book-card-content">
                     <div class="book-card-left">
-                        <h3>${info.title}</h3>
+                        <h3>${info.title}${similarityBadge}</h3>
                         ${info.series_title && info.series_title !== 'Standalone' ? `
                             <div style="color: #9b59b6; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">
                                 ${info.series_title}${info.series_entry_number ? ` #${info.series_entry_number}` : ''}
