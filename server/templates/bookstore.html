@@ -244,6 +244,60 @@
             font-size: 1rem;
         }
 
+        /* Expandable detail sections */
+        .expandable-section {
+            border: 1px solid #e8f4f8;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1ecf1 100%);
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-header:hover {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        }
+
+        .section-header h4 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .section-toggle {
+            font-size: 0.8rem;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .section-content {
+            padding: 1rem;
+            background: white;
+            display: none;
+        }
+
+        .section-content.expanded {
+            display: block;
+        }
+
+        .section-content p {
+            margin-bottom: 0.5rem;
+        }
+
+        .section-content p:last-child {
+            margin-bottom: 0;
+        }
+
         .detail-list {
             list-style-position: inside;
             margin-left: 1rem;
@@ -1051,7 +1105,7 @@
             card.innerHTML = `
                 <h3>${info.title}</h3>
                 <div class="book-meta">
-                    <strong>Authors:</strong> ${info.authors.join(', ')}<br>
+                    <strong>Authors:</strong> ${Array.isArray(info.authors) ? info.authors.join(', ') : info.authors}<br>
                     <strong>Published:</strong> ${info.publication_year}<br>
                     <strong>ISBN:</strong> ${info.isbn}
                 </div>
@@ -1081,82 +1135,186 @@
             return card;
         }
 
-        // Create detailed book information
+        // Create detailed book information with organized expandable sections
         function createBookDetails(info) {
-            const seriesInfo = info.series_title !== 'Standalone' ? `
-                <div class="detail-section">
-                    <h4>📚 Series Information</h4>
-                    <p><strong>Series:</strong> ${info.series_title}</p>
-                    <p><strong>Entry Number:</strong> ${info.series_entry_number}</p>
-                    <p><strong>Description:</strong> ${info.series_description}</p>
-                    ${info.other_series_entries.length > 0 ? `
-                        <p><strong>Other books in series:</strong></p>
-                        <ul class="detail-list">
-                            ${info.other_series_entries.map(entry => `<li>${entry}</li>`).join('')}
-                        </ul>
-                    ` : ''}
-                </div>
-            ` : '';
-
-            const ratingsSection = info.ratings.length > 0 ? `
-                <div class="detail-section">
-                    <h4>⭐ Ratings & Reception</h4>
-                    <div>
-                        ${info.ratings.map(rating => `<span class="rating-badge">${rating}</span>`).join('')}
-                    </div>
-                    <p><strong>Critical Consensus:</strong> ${info.critical_consensus}</p>
-                    <p><strong>Reception Overview:</strong> ${info.reception_overview}</p>
-                </div>
-            ` : '';
-
-            const awardsSection = info.awards.length > 0 ? `
-                <div class="detail-section">
-                    <h4>🏆 Awards</h4>
-                    <ul class="detail-list">
-                        ${info.awards.map(award => `<li>${award}</li>`).join('')}
-                    </ul>
-                </div>
-            ` : '';
-
+            const sectionId = `book-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            
             return `
-                <div class="detail-section">
-                    <h4>📊 Book Details</h4>
-                    <p><strong>Pages:</strong> ${info.page_count} | <strong>Words:</strong> ${info.word_count.toLocaleString()}</p>
-                    <p><strong>Emotional Tone:</strong> ${info.emotional_tone}</p>
-                    <p><strong>Reading Difficulty:</strong> ${info.reading_difficulty}</p>
-                    <p><strong>Target Audience:</strong> ${info.target_audience}</p>
-                    <p><strong>Content Rating:</strong> ${info.spicy_rating}</p>
-                    ${info.content_warnings ? `<p><strong>Content Warnings:</strong> ${info.content_warnings}</p>` : ''}
+                <!-- Basic Information -->
+                <div class="expandable-section">
+                    <div class="section-header" onclick="toggleSection('${sectionId}-basic')">
+                        <h4>📖 Basic Information</h4>
+                        <span class="section-toggle">+ Show</span>
+                    </div>
+                    <div id="${sectionId}-basic" class="section-content">
+                        <p><strong>Title:</strong> ${info.title}</p>
+                        <p><strong>Authors:</strong> ${Array.isArray(info.authors) ? info.authors.join(', ') : info.authors}</p>
+                        <p><strong>Publication Year:</strong> ${info.publication_year}</p>
+                        <p><strong>ISBN:</strong> ${info.isbn}</p>
+                    </div>
                 </div>
 
-                <div class="detail-section">
-                    <h4>✍️ Writing Style</h4>
-                    <p><strong>Style:</strong> ${info.general_style}</p>
-                    <p><strong>Narrative POV:</strong> ${info.narrative_pov}</p>
-                    <p><strong>Pacing:</strong> ${info.pacing}</p>
+                <!-- Series Information -->
+                ${info.series_title && info.series_title !== 'Standalone' ? `
+                <div class="expandable-section">
+                    <div class="section-header" onclick="toggleSection('${sectionId}-series')">
+                        <h4>📚 Series Information</h4>
+                        <span class="section-toggle">+ Show</span>
+                    </div>
+                    <div id="${sectionId}-series" class="section-content">
+                        <p><strong>Series:</strong> ${info.series_title}</p>
+                        ${info.series_entry_number ? `<p><strong>Entry Number:</strong> ${info.series_entry_number}</p>` : ''}
+                        ${info.series_description ? `<p><strong>Description:</strong> ${info.series_description}</p>` : ''}
+                        ${info.other_series_entries && info.other_series_entries.length > 0 ? `
+                            <p><strong>Other books in series:</strong></p>
+                            <ul class="detail-list">
+                                ${info.other_series_entries.map(entry => `<li>${entry}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Content Details -->
+                <div class="expandable-section">
+                    <div class="section-header" onclick="toggleSection('${sectionId}-content')">
+                        <h4>📄 Content Details</h4>
+                        <span class="section-toggle">+ Show</span>
+                    </div>
+                    <div id="${sectionId}-content" class="section-content">
+                        <p><strong>Description:</strong> ${info.description}</p>
+                        <p><strong>Pages:</strong> ${info.page_count} | <strong>Words:</strong> ${info.word_count ? info.word_count.toLocaleString() : 'N/A'}</p>
+                        <p><strong>Genres:</strong> ${info.genres ? info.genres.join(', ') : 'N/A'}</p>
+                        <p><strong>Emotional Tone:</strong> ${info.emotional_tone}</p>
+                        <p><strong>Content Rating:</strong> ${info.spicy_rating}</p>
+                        ${info.content_warnings ? `<p><strong>Content Warnings:</strong> ${info.content_warnings}</p>` : ''}
+                        <p><strong>Target Audience:</strong> ${info.target_audience}</p>
+                        <p><strong>Reader Demographics:</strong> ${info.reader_demographics}</p>
+                        <p><strong>Setting:</strong> ${info.setting_time_place}</p>
+                    </div>
                 </div>
 
-                <div class="detail-section">
-                    <h4>🌍 Setting & Context</h4>
-                    <p><strong>Setting:</strong> ${info.setting_time_place}</p>
-                    <p><strong>Similar Works:</strong> ${info.similar_works.join(', ')}</p>
-                    ${info.frequently_compared_to.length > 0 ? `<p><strong>Frequently Compared To:</strong> ${info.frequently_compared_to.join(', ')}</p>` : ''}
+                <!-- Writing Style -->
+                <div class="expandable-section">
+                    <div class="section-header" onclick="toggleSection('${sectionId}-style')">
+                        <h4>✍️ Writing Style</h4>
+                        <span class="section-toggle">+ Show</span>
+                    </div>
+                    <div id="${sectionId}-style" class="section-content">
+                        <p><strong>General Style:</strong> ${info.general_style}</p>
+                        <p><strong>Narrative POV:</strong> ${info.narrative_pov}</p>
+                        <p><strong>Pacing:</strong> ${info.pacing}</p>
+                        <p><strong>Reading Difficulty:</strong> ${info.reading_difficulty}</p>
+                    </div>
                 </div>
 
-                ${seriesInfo}
-                ${ratingsSection}
-                ${awardsSection}
-
-                <div class="detail-section">
-                    <h4>👤 Author Information</h4>
-                    <p>${info.author_background}</p>
-                    ${info.author_other_works.length > 0 ? `
-                        <p><strong>Other Notable Works:</strong></p>
-                        <ul class="detail-list">
-                            ${info.author_other_works.map(work => `<li>${work}</li>`).join('')}
-                        </ul>
-                    ` : ''}
+                <!-- Critical Reception -->
+                ${(info.awards && info.awards.length > 0) || (info.bestseller_lists && info.bestseller_lists.length > 0) || info.critical_consensus || (info.critical_quotes && info.critical_quotes.length > 0) || (info.positive_quotes && info.positive_quotes.length > 0) ? `
+                <div class="expandable-section">
+                    <div class="section-header" onclick="toggleSection('${sectionId}-critics')">
+                        <h4>🏆 Critical Reception</h4>
+                        <span class="section-toggle">+ Show</span>
+                    </div>
+                    <div id="${sectionId}-critics" class="section-content">
+                        ${info.awards && info.awards.length > 0 ? `
+                            <p><strong>Awards:</strong></p>
+                            <ul class="detail-list">
+                                ${info.awards.map(award => `<li>${award}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                        ${info.bestseller_lists && info.bestseller_lists.length > 0 ? `
+                            <p><strong>Bestseller Lists:</strong></p>
+                            <ul class="detail-list">
+                                ${info.bestseller_lists.map(list => `<li>${list}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                        ${info.critical_consensus ? `<p><strong>Critical Consensus:</strong> ${info.critical_consensus}</p>` : ''}
+                        ${info.critical_quotes && info.critical_quotes.length > 0 ? `
+                            <p><strong>Critical Quotes:</strong></p>
+                            <ul class="detail-list">
+                                ${info.critical_quotes.map(quote => `<li>"${quote}"</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                        ${info.positive_quotes && info.positive_quotes.length > 0 ? `
+                            <p><strong>Positive Reviews:</strong></p>
+                            <ul class="detail-list">
+                                ${info.positive_quotes.map(quote => `<li>"${quote}"</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
                 </div>
+                ` : ''}
+
+                <!-- User Reception -->
+                ${(info.user_ratings && info.user_ratings.length > 0) || (info.user_quotes && info.user_quotes.length > 0) || info.user_reception || (info.ratings && info.ratings.length > 0) || (info.review_quotes && info.review_quotes.length > 0) ? `
+                <div class="expandable-section">
+                    <div class="section-header" onclick="toggleSection('${sectionId}-users')">
+                        <h4>⭐ User Reception</h4>
+                        <span class="section-toggle">+ Show</span>
+                    </div>
+                    <div id="${sectionId}-users" class="section-content">
+                        ${(info.user_ratings && info.user_ratings.length > 0) || (info.ratings && info.ratings.length > 0) ? `
+                            <p><strong>Ratings:</strong></p>
+                            <div style="margin-bottom: 0.75rem;">
+                                ${(info.user_ratings || info.ratings || []).map(rating => `<span class="rating-badge">${rating}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                        ${info.user_reception ? `<p><strong>User Reception:</strong> ${info.user_reception}</p>` : ''}
+                        ${info.reception_overview ? `<p><strong>Reception Overview:</strong> ${info.reception_overview}</p>` : ''}
+                        ${info.user_quotes && info.user_quotes.length > 0 ? `
+                            <p><strong>User Reviews:</strong></p>
+                            <ul class="detail-list">
+                                ${info.user_quotes.map(quote => `<li>"${quote}"</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                        ${info.review_quotes && info.review_quotes.length > 0 && (!info.user_quotes || info.user_quotes.length === 0) ? `
+                            <p><strong>Review Quotes:</strong></p>
+                            <ul class="detail-list">
+                                ${info.review_quotes.map(quote => `<li>"${quote}"</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Similar Works -->
+                ${(info.similar_works && info.similar_works.length > 0) || (info.frequently_compared_to && info.frequently_compared_to.length > 0) ? `
+                <div class="expandable-section">
+                    <div class="section-header" onclick="toggleSection('${sectionId}-similar')">
+                        <h4>🔗 Similar Works</h4>
+                        <span class="section-toggle">+ Show</span>
+                    </div>
+                    <div id="${sectionId}-similar" class="section-content">
+                        ${info.similar_works && info.similar_works.length > 0 ? `<p><strong>Similar Works:</strong> ${info.similar_works.join(', ')}</p>` : ''}
+                        ${info.frequently_compared_to && info.frequently_compared_to.length > 0 ? `<p><strong>Frequently Compared To:</strong> ${info.frequently_compared_to.join(', ')}</p>` : ''}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Author Information -->
+                ${info.author_background || (info.author_other_works && info.author_other_works.length > 0) || (info.author_other_series && info.author_other_series.length > 0) ? `
+                <div class="expandable-section">
+                    <div class="section-header" onclick="toggleSection('${sectionId}-author')">
+                        <h4>👤 Author Information</h4>
+                        <span class="section-toggle">+ Show</span>
+                    </div>
+                    <div id="${sectionId}-author" class="section-content">
+                        ${info.author_background ? `<p><strong>Background:</strong> ${info.author_background}</p>` : ''}
+                        ${info.author_other_series && info.author_other_series.length > 0 ? `
+                            <p><strong>Other Series:</strong></p>
+                            <ul class="detail-list">
+                                ${info.author_other_series.map(series => `<li>${series}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                        ${info.author_other_works && info.author_other_works.length > 0 ? `
+                            <p><strong>Other Notable Works:</strong></p>
+                            <ul class="detail-list">
+                                ${info.author_other_works.map(work => `<li>${work}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                </div>
+                ` : ''}
             `;
         }
 
@@ -1171,6 +1329,22 @@
             } else {
                 details.classList.add('expanded');
                 button.textContent = 'Hide Details';
+            }
+        }
+
+        // Toggle expandable section visibility
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const header = section.parentElement.querySelector('.section-header');
+            const toggle = header.querySelector('.section-toggle');
+            const isExpanded = section.classList.contains('expanded');
+            
+            if (isExpanded) {
+                section.classList.remove('expanded');
+                toggle.textContent = '+ Show';
+            } else {
+                section.classList.add('expanded');
+                toggle.textContent = '- Hide';
             }
         }
 
