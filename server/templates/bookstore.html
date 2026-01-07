@@ -463,6 +463,284 @@
             display: block;
         }
 
+        /* Compact Add Books Section Styles */
+        .add-books-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border: 1px solid #e9ecef;
+        }
+
+        .add-books-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .add-books-header h2 {
+            margin-bottom: 0.5rem;
+            font-size: 1.6rem;
+        }
+
+        .section-subtitle {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin: 0;
+            font-style: italic;
+        }
+
+        .compact-import-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            background: #f8f9fa;
+            padding: 0.25rem;
+            border-radius: 8px;
+            width: fit-content;
+        }
+
+        .compact-tab-button {
+            background: transparent;
+            border: none;
+            padding: 0.6rem 1rem;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .compact-tab-button.active {
+            background: #3498db;
+            color: white;
+            box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+        }
+
+        .compact-tab-button:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+        .tab-icon {
+            font-size: 1rem;
+        }
+
+        .tab-label {
+            font-weight: 500;
+        }
+
+        .compact-tab-content {
+            display: none;
+        }
+
+        .compact-tab-content.active {
+            display: block;
+        }
+
+        .compact-form {
+            margin-bottom: 1rem;
+        }
+
+        .compact-form-group {
+            margin-bottom: 0.75rem;
+        }
+
+        .compact-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        .compact-textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn-compact {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+        }
+
+        .btn-compact:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-compact-primary {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(39, 174, 96, 0.2);
+        }
+
+        .btn-compact-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+        }
+
+        .btn-compact-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .btn-compact-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-compact-clear {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .btn-compact-clear:hover {
+            background: #c82333;
+        }
+
+        .btn-icon {
+            font-size: 1rem;
+        }
+
+        .btn-text {
+            font-weight: 500;
+        }
+
+        .compact-image-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        .compact-image-upload-area:hover {
+            border-color: #3498db;
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+        .compact-upload-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .upload-icon-small {
+            font-size: 2rem;
+            color: #6c757d;
+        }
+
+        .upload-text-small {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .compact-button-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .compact-extracted-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            border: 1px solid #e9ecef;
+            display: none;
+        }
+
+        .compact-extracted-preview.show {
+            display: block;
+        }
+
+        .preview-header h3 {
+            margin: 0 0 0.75rem 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .preview-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .async-toggle-compact {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .async-toggle-compact label {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .compact-tasks-section {
+            margin-top: 1.5rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            padding: 0.75rem;
+        }
+
+        .tasks-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .tasks-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .tasks-indicator {
+            color: #6c757d;
+            font-size: 0.75rem;
+        }
+
         .image-upload-area {
             border: 2px dashed #3498db;
             border-radius: 10px;
@@ -1057,104 +1335,111 @@
         <h1>📚 Bookstore Research</h1>
         
         <!-- Add Books Section -->
-        <div class="section">
-            <h2>📚 Add Books</h2>
-            <p style="margin-bottom: 1rem; color: #7f8c8d;">Extract multiple book titles from text or images, then research them.</p>
+        <div class="section add-books-section">
+            <div class="add-books-header">
+                <h2>📚 Add Books</h2>
+                <p class="section-subtitle">Extract titles from text or images, then research them</p>
+            </div>
             
-            <!-- Bulk Import Tools -->
-            <div class="import-tabs">
-                <button class="tab-button active" onclick="switchTab('text')">📝 Text Import</button>
-                <button class="tab-button" onclick="switchTab('image')">🖼️ Image Import</button>
+            <!-- Compact Import Tabs -->
+            <div class="compact-import-tabs">
+                <button class="compact-tab-button active" onclick="switchTab('text')">
+                    <span class="tab-icon">📝</span>
+                    <span class="tab-label">Text</span>
+                </button>
+                <button class="compact-tab-button" onclick="switchTab('image')">
+                    <span class="tab-icon">📸</span>
+                    <span class="tab-label">Image</span>
+                </button>
             </div>
 
             <!-- Text Import Tab -->
-            <div id="textTab" class="tab-content active">
-                <form id="textImportForm" class="research-form">
-                    <div class="form-group">
-                        <label for="bookListText">Book List (Unstructured Text)</label>
+            <div id="textTab" class="compact-tab-content active">
+                <form id="textImportForm" class="compact-form">
+                    <div class="compact-form-group">
                         <textarea 
                             id="bookListText" 
                             name="book_list_text" 
-                            placeholder="Paste your book list here... Can be any format: titles with authors, reading lists, bibliographies, etc."
-                            style="min-height: 150px;"
+                            placeholder="Paste your book list here... titles, authors, bibliographies, etc."
+                            class="compact-textarea"
                         ></textarea>
                     </div>
-                    <button type="submit" class="btn" id="textImportBtn">
-                        📝 Extract Books from Text
+                    <button type="submit" class="btn-compact" id="textImportBtn">
+                        <span class="btn-icon">📝</span>
+                        <span class="btn-text">Extract Books</span>
                     </button>
                 </form>
                 <div id="textImportStatus"></div>
             </div>
 
             <!-- Image Import Tab -->
-            <div id="imageTab" class="tab-content">
-                <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('imageInput').click()">
-                    <div class="upload-icon">📷</div>
-                    <div class="upload-text">Click to upload, drag & drop, or paste an image</div>
-                    <div class="upload-subtext">
-                        Supports book covers, reading lists, library catalogs, bookstore displays<br>
-                        Formats: JPEG, PNG, WebP, HEIC
+            <div id="imageTab" class="compact-tab-content">
+                <div class="compact-image-upload-area" id="imageUploadArea" onclick="document.getElementById('imageInput').click()">
+                    <div class="compact-upload-content">
+                        <div class="upload-icon-small">📷</div>
+                        <div class="upload-text-small">Click, drag, or paste image</div>
+                        <div class="compact-button-group">
+                            <button type="button" class="btn-compact-secondary" onclick="event.stopPropagation(); document.getElementById('imageInput').click()">
+                                📁 File
+                            </button>
+                            <button type="button" class="btn-compact-secondary" onclick="event.stopPropagation(); startWebcam()">
+                                📸 Camera
+                            </button>
+                            <button type="button" class="btn-compact-clear" onclick="event.stopPropagation(); clearImage()">
+                                🗑️
+                            </button>
+                        </div>
+                        <input type="file" id="imageInput" class="file-input" accept="image/*" onchange="handleImageUpload(event)">
                     </div>
-                    <div class="button-group" style="margin-top: 1rem;">
-                        <button type="button" class="btn" onclick="event.stopPropagation(); document.getElementById('imageInput').click()">
-                            📁 Choose File
-                        </button>
-                        <button type="button" class="btn-webcam" onclick="event.stopPropagation(); startWebcam()">
-                            📸 Take Photo
-                        </button>
-                        <button type="button" class="btn-secondary" onclick="event.stopPropagation(); clearImage()">
-                            🗑️ Clear
-                        </button>
-                    </div>
-                    <input type="file" id="imageInput" class="file-input" accept="image/*" onchange="handleImageUpload(event)">
                 </div>
 
                 <div class="camera-container" id="cameraContainer">
                     <video id="cameraVideo" autoplay playsinline></video>
                     <canvas id="cameraCanvas" style="display: none;"></canvas>
                     <div class="camera-controls">
-                        <button type="button" class="btn" onclick="capturePhoto()">📸 Capture</button>
-                        <button type="button" class="btn-secondary" onclick="stopWebcam()">❌ Cancel</button>
+                        <button type="button" class="btn-compact" onclick="capturePhoto()">📸 Capture</button>
+                        <button type="button" class="btn-compact-secondary" onclick="stopWebcam()">❌ Cancel</button>
                     </div>
                 </div>
 
                 <div id="imagePreviewContainer"></div>
 
-                <form id="imageImportForm" class="research-form" style="display: none;">
-                    <button type="submit" class="btn" id="imageImportBtn">
-                        🖼️ Extract Books from Image
+                <form id="imageImportForm" class="compact-form" style="display: none;">
+                    <button type="submit" class="btn-compact" id="imageImportBtn">
+                        <span class="btn-icon">🖼️</span>
+                        <span class="btn-text">Extract Books</span>
                     </button>
                 </form>
                 <div id="imageImportStatus"></div>
             </div>
 
             <!-- Extracted Books Preview -->
-            <div id="extractedBooksPreview" class="extracted-books-preview">
-                <h3 style="margin-bottom: 1rem; color: #2c3e50;">📋 Extracted Books</h3>
+            <div id="extractedBooksPreview" class="compact-extracted-preview">
+                <div class="preview-header">
+                    <h3>📋 Extracted Books</h3>
+                </div>
                 <div id="extractedBooksList"></div>
-                <div style="margin-top: 1rem;">
-                    <button type="button" class="btn" id="researchAllBtn" onclick="researchAllExtractedBooks()">
-                        🔍 Research All Books
+                <div class="preview-actions">
+                    <button type="button" class="btn-compact-primary" id="researchAllBtn" onclick="researchAllExtractedBooks()">
+                        <span class="btn-icon">🔍</span>
+                        <span class="btn-text">Research All</span>
                     </button>
-                    <button type="button" class="btn-secondary" onclick="clearExtractedBooks()">
-                        🗑️ Clear All
+                    <button type="button" class="btn-compact-clear" onclick="clearExtractedBooks()">
+                        🗑️ Clear
                     </button>
-                    <div class="async-toggle" style="margin-top: 0.5rem;">
+                    <div class="async-toggle-compact">
                         <input type="checkbox" id="useBulkAsync" checked>
-                        <label for="useBulkAsync">
-                            ⚡ Use async bulk research (recommended for multiple books)
-                        </label>
+                        <label for="useBulkAsync">⚡ Async bulk research</label>
                     </div>
                 </div>
             </div>
 
             <!-- Research Tasks Monitor (Compact) -->
-            <div id="researchTasksSection" style="margin-top: 2rem; padding: 0.75rem; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #3498db;">
-                <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                    <span style="font-weight: 600; color: #2c3e50; font-size: 0.95rem;">⚡ Research Tasks</span>
-                    <span style="margin-left: auto; color: #7f8c8d; font-size: 0.8rem;" id="taskAutoRefreshIndicator">Auto-refreshing...</span>
+            <div id="researchTasksSection" class="compact-tasks-section">
+                <div class="tasks-header">
+                    <span class="tasks-title">⚡ Research Tasks</span>
+                    <span class="tasks-indicator" id="taskAutoRefreshIndicator">Auto-refreshing...</span>
                 </div>
-                
                 <div id="allTasksContainer">
                     <div class="loading" style="padding: 0.5rem; font-size: 0.9rem;">Loading tasks...</div>
                 </div>
@@ -1875,12 +2160,13 @@
 
         // Switch between text and image import tabs
         function switchTab(tabName) {
-            // Update tab buttons
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            // Update tab buttons - support both old and new classes
+            document.querySelectorAll('.tab-button, .compact-tab-button').forEach(btn => btn.classList.remove('active'));
+            const targetBtn = document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"], .compact-tab-button[onclick="switchTab('${tabName}')"]`);
+            if (targetBtn) targetBtn.classList.add('active');
             
-            // Update tab content
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            // Update tab content - support both old and new classes
+            document.querySelectorAll('.tab-content, .compact-tab-content').forEach(content => content.classList.remove('active'));
             document.getElementById(tabName + 'Tab').classList.add('active');
         }
 
