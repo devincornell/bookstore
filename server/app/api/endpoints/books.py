@@ -2,20 +2,23 @@
 API endpoints for book research functionality using pydantic-ai
 """
 import typing
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, BackgroundTasks, FastAPI
 import pydantic
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from pydantic import BaseModel, Field
+from mcp.server import FastMCP
+import logging
 
-#from dotenv import load_dotenv
-#import os
-#load_dotenv()
 
 from app.core.config import app_settings
-#from app.database import get_db
-#from app.models import BookStoreDB
-from app.mongo_models import BookResearch, init_beanie_models, ResearchTask, TaskStatusEnum, BookResearchWithSimilarity
+from app.mongo_models import (
+    BookResearch, 
+    init_beanie_models, 
+    ResearchTask, 
+    TaskStatusEnum, 
+    BookResearchWithSimilarity,
+)
 from app.ai import (
     BookResearchService, 
     BookResearchOutput, 
@@ -30,6 +33,7 @@ from app.ai import (
 ai_services = AIServices.from_api_key(app_settings.GOOGLE_API_KEY)
 
 router = APIRouter()
+mcp_app = FastMCP('Test tools.', stateless_http = True)
 
 
 @router.get("/recommend", response_model=BookRecommendOutput)
@@ -104,5 +108,29 @@ async def books_clear(
     await BookResearch.delete_all()
     return True
 
+
+@mcp_app.tool()
+async def search_books(
+    search_query: str = Query(..., description="Search query string"),
+) -> str:
+    '''OFFICIAL BOOKSTORE TOOL. Search bookstore based on any relevant information.
+    '''
+    logging.log(logging.INFO, "Received search query: %s", search_query)
+
+    await init_beanie_models()
+    query_vector = await ai_services.embedding.generate_embedding(search_query)
+    books = await BookResearch.vector_similarity(query_vector=query_vector, limit=5)
+
+    out = ''
+    for i, book in enumerate(books):
+        out += f'# Book Result: {i}\n\n{book.book.as_string()}\n\n\n\n'
+    return out
+
+def mount_mcp_apps(router: APIRouter|FastAPI) -> None:
+    """Mount MCP apps to the given router."""
+    sse_app = mcp_app.sse_app()
+    streamable_app = mcp_app.streamable_http_app()
+    router.mount('/mcp/sse/', sse_app)
+    router.mount('/mcp/streamable/', streamable_app)
 
 
