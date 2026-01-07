@@ -30,13 +30,25 @@ class SearchResult(BaseModel):
     score: float  # Automatically mapped from vectorSearchScore
 
 class BookResearch(beanie.Document):
-    class Settings:
-        name = "book_research"  # The collection name in MongoDB
-    
+    title: str = pydantic.Field(description="The full standard title of the book, not including subtitle or information about the series.")
+    authors: list[str] = pydantic.Field(description="The authors' names. Not pen initials, and names should be in order - don't do 'last name, first name' format)")
+    publication_year: int = pydantic.Field(description="The year the book was published")
+
     provided_title: str = pydantic.Field(description="The title of the book as provided in the research request")
     provided_other_info: str|None = pydantic.Field(description="Other information about the book that could be used to identify the correct book. Could include author, publication date, etc.")
+    
     research_output: BookResearchOutput = pydantic.Field(description="Comprehensive researched information about the book")
     embedding: list[float] = pydantic.Field(description="Embedding vector representing the book information")
+    
+    class Settings:
+        name = "book_research"  # The collection name in MongoDB
+        indexes = [
+            pymongo.IndexModel(
+                [("title", pymongo.ASCENDING), ("publication_year", pymongo.DESCENDING)],
+                unique=True,
+                name="title_publication_year_unique" # Giving it an explicit name helps debugging
+            )
+        ]
 
     @classmethod
     async def add_search_index(cls, db: pymongo.AsyncMongoClient) -> None:
@@ -73,6 +85,9 @@ class BookResearch(beanie.Document):
     @classmethod
     async def insert_book(cls, provided_title: str, provided_other_info: str|None, research_output: BookResearchOutput, embedding: list[float]) -> typing.Self:
         research = cls(
+            title = research_output.info.title,
+            authors = research_output.info.authors,
+            publication_year = research_output.info.publication_year,
             provided_title=provided_title,
             provided_other_info=provided_other_info,
             research_output=research_output,
