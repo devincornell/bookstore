@@ -36,6 +36,7 @@ class ResearchTask(beanie.Document):
     other_info: Optional[str] = Field(default=None, description="Additional information about the task")
     status: TaskStatusEnum = Field(default=TaskStatusEnum.WORKING, description="Current status of the research task")
     started_at: datetime = Field(default_factory=datetime.now, description="Task creation timestamp")
+    reason: str|None = Field(default=None, description="Reason for failure, if applicable")
     
     @classmethod
     async def insert_research_task(
@@ -43,12 +44,14 @@ class ResearchTask(beanie.Document):
         title: str, 
         other_info: Optional[str] = None,
         status: TaskStatusEnum = TaskStatusEnum.WORKING,
+        reason: Optional[str] = None,
     ) -> typing.Self:
         """Create a new single book research task"""        
         task = cls(
             title=title,
             other_info=other_info,
             status=status,
+            reason=reason,
         )
         return await task.insert()
     

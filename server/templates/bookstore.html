@@ -984,6 +984,22 @@
             margin-bottom: 0.25rem;
         }
 
+        .task-reason {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            margin: 0.5rem 0;
+            color: #495057;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .task-reason strong {
+            color: #343a40;
+            font-weight: 600;
+        }
+
         .task-progress {
             margin: 0.5rem 0;
         }
@@ -1366,7 +1382,7 @@
                     </div>
                     <button type="submit" class="btn-compact" id="textImportBtn">
                         <span class="btn-icon">📝</span>
-                        <span class="btn-text">Extract Books</span>
+                        <span class="btn-text">Extract & Research Books</span>
                     </button>
                 </form>
                 <div id="textImportStatus"></div>
@@ -1407,7 +1423,7 @@
                 <form id="imageImportForm" class="compact-form" style="display: none;">
                     <button type="submit" class="btn-compact" id="imageImportBtn">
                         <span class="btn-icon">🖼️</span>
-                        <span class="btn-text">Extract Books</span>
+                        <span class="btn-text">Extract & Research Books</span>
                     </button>
                 </form>
                 <div id="imageImportStatus"></div>
@@ -2262,6 +2278,48 @@
             imageImportStatus.innerHTML = '';
         }
 
+        // Start research for a list of books
+        async function startResearchForBooks(books) {
+            try {
+                showTextStatus('loading', `🔍 Starting research for ${books.length} books...`);
+                
+                const response = await fetch(`${API_BASE}/research/research_and_insert_async`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ books: books })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to start research');
+                }
+
+                const tasks = await response.json();
+                console.log('Research tasks created:', tasks);
+                
+                // Add all tasks to active tasks
+                tasks.forEach(task => {
+                    activeTasks.set(task.id, {
+                        taskId: task.id,
+                        title: task.title || `Research for book`,
+                        type: 'single'
+                    });
+                });
+
+                showTextStatus('success', `✅ Started research for ${books.length} books (${tasks.length} tasks created)`);
+
+                // Start monitoring tasks
+                startTaskPolling();
+                await refreshActiveTasks();
+                
+            } catch (error) {
+                console.error('Research start error:', error);
+                showTextStatus('error', `❌ Error starting research: ${error.message}`);
+            }
+        }
+
         // Extract books from text
         async function extractBooksFromText() {
             const formData = new FormData(textImportForm);
@@ -2273,7 +2331,7 @@
             }
 
             textImportBtn.disabled = true;
-            textImportBtn.textContent = 'Extracting...';
+            textImportBtn.textContent = 'Extracting & Researching...';
             showTextStatus('loading', '🔍 Extracting book information from text...');
 
             try {
@@ -2287,8 +2345,17 @@
                 }
 
                 const data = await response.json();
-                handleExtractedBooks(data.books);
-                showTextStatus('success', '✅ Books extracted successfully!');
+                
+                if (!data.books || data.books.length === 0) {
+                    showTextStatus('error', 'No books were found in the provided text.');
+                    return;
+                }
+
+                showTextStatus('success', `✅ Extracted ${data.books.length} books, starting research...`);
+                
+                // Immediately start research for extracted books
+                await startResearchForBooks(data.books);
+                
                 textImportForm.reset();
 
             } catch (error) {
@@ -2296,7 +2363,7 @@
                 showTextStatus('error', `❌ Error extracting books: ${error.message}`);
             } finally {
                 textImportBtn.disabled = false;
-                textImportBtn.textContent = '📝 Extract Books from Text';
+                textImportBtn.textContent = '📝 Extract & Research Books';
             }
         }
 
@@ -2308,7 +2375,7 @@
             }
 
             imageImportBtn.disabled = true;
-            imageImportBtn.textContent = 'Extracting...';
+            imageImportBtn.textContent = 'Extracting & Researching...';
             showImageStatus('loading', '🔍 Analyzing image and extracting book information...');
 
             try {
@@ -2326,15 +2393,26 @@
                 }
 
                 const data = await response.json();
-                handleExtractedBooks(data.books);
-                showImageStatus('success', '✅ Books extracted from image successfully!');
+                
+                if (!data.books || data.books.length === 0) {
+                    showImageStatus('error', 'No books were found in the provided image.');
+                    return;
+                }
+
+                showImageStatus('success', `✅ Extracted ${data.books.length} books from image, starting research...`);
+                
+                // Immediately start research for extracted books
+                await startResearchForBooks(data.books);
+                
+                // Clear the image and reset form
+                clearImage();
 
             } catch (error) {
                 console.error('Image extraction error:', error);
                 showImageStatus('error', `❌ Error extracting books: ${error.message}`);
             } finally {
                 imageImportBtn.disabled = false;
-                imageImportBtn.textContent = '🖼️ Extract Books from Image';
+                imageImportBtn.textContent = '🖼️ Extract & Research Books';
             }
         }
 
@@ -2665,8 +2743,13 @@
                         </div>
                         <div class="task-meta">
                             <span class="status-badge status-${statusClass}">${task.status}</span>
-                            Single Book Research • Created: ${new Date(task.started_at).toLocaleString()}
+                            Created: ${new Date(task.started_at).toLocaleString()}
                         </div>
+                        ${task.reason ? `
+                            <div class="task-reason">
+                                <strong>Reason:</strong> ${task.reason}
+                            </div>
+                        ` : ''}
                         ${task.status === 'working' ? `
                             <div class="task-progress">
                                 <div class="loading">Research in progress...</div>
@@ -2691,7 +2774,7 @@
 
         // Get display title for a task
         function getTaskDisplayTitle(task) {
-            return task.title || 'Single book research';
+            return task.title || task.book_title || 'Book research';
         }
 
         // Show task result in a popup or modal
@@ -2776,20 +2859,31 @@
 
         // Delete a failed task
         async function deleteTask(taskId) {
+            console.log('Attempting to delete task with ID:', taskId);
+            
+            if (!taskId || taskId === 'undefined') {
+                alert('Invalid task ID. Cannot delete task.');
+                return;
+            }
+            
             if (!confirm('Are you sure you want to delete this failed task?')) {
                 return;
             }
             
             try {
+                console.log('Making DELETE request to:', `${API_BASE}/research/tasks/delete/${taskId}`);
                 const response = await fetch(`${API_BASE}/research/tasks/delete/${taskId}`, {
                     method: 'DELETE'
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Failed to delete task');
+                    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    console.error('Delete request failed:', response.status, errorData);
+                    throw new Error(errorData.detail || `Failed to delete task (HTTP ${response.status})`);
                 }
 
+                console.log('Task deleted successfully');
+                
                 // Remove from activeTasks if present
                 activeTasks.delete(taskId);
                 

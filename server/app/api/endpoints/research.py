@@ -4,10 +4,11 @@ API endpoints for book research functionality using pydantic-ai
 import typing
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, BackgroundTasks
 import pydantic
+import pymongo
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from pydantic import BaseModel, Field
-
+import pymongo.errors
 
 from app.core.config import app_settings
 #from app.database import get_db
@@ -70,17 +71,22 @@ async def background_task_research(
         )
         embedding = await ai_services.embedding.generate_embedding(research_output.info.as_string())
         await init_beanie_models()
-        await BookResearch.insert_book(
-            research_output=research_output,
-            embedding=embedding,
-            provided_title=research_request.title,
-            provided_other_info=research_request.other_info,
-        )
-        task.status = TaskStatusEnum.SUCCESS
+        try:
+            await BookResearch.insert_book(
+                research_output=research_output,
+                embedding=embedding,
+                provided_title=research_request.title,
+                provided_other_info=research_request.other_info,
+            )
+            task.status = TaskStatusEnum.SUCCESS
+        except pymongo.errors.DuplicateKeyError:
+            task.status = TaskStatusEnum.FAILURE
+            task.reason = 'Book already exists in database'
         await task.save()
     except Exception as e:
         print(f"Error researching book '{research_request.title}': {str(e)}")
         task.status = TaskStatusEnum.FAILURE
+        task.reason = f'{type(e).__name__}: {str(e)}'
         await task.save()
 
 
@@ -129,7 +135,7 @@ async def research_task_get(
 
 
 @router.get("/tasks/list_working", response_model=ResearchTasks)
-async def research_tasks_list(
+async def research_tasks_list_working(
 ) -> ResearchTasks:
     await init_beanie_models()
     tasks = await ResearchTask.find(ResearchTask.status == TaskStatusEnum.WORKING).to_list()
@@ -138,7 +144,7 @@ async def research_tasks_list(
     )
 
 @router.get("/tasks/list_failed", response_model=ResearchTasks)
-async def research_tasks_list(
+async def research_tasks_list_failed(
 ) -> ResearchTasks:
     await init_beanie_models()
     tasks = await ResearchTask.find(ResearchTask.status == TaskStatusEnum.FAILURE).to_list()
