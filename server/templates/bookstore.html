@@ -2301,8 +2301,9 @@
                 
                 // Add all tasks to active tasks
                 tasks.forEach(task => {
-                    activeTasks.set(task.id, {
-                        taskId: task.id,
+                    const taskId = task._id || task.id;
+                    activeTasks.set(taskId, {
+                        taskId: taskId,
                         title: task.title || `Research for book`,
                         type: 'single'
                     });
@@ -2514,8 +2515,9 @@
                 
                 // Add all tasks to active tasks
                 tasks.forEach(task => {
-                    activeTasks.set(task.id, {
-                        taskId: task.id,
+                    const taskId = task._id || task.id;
+                    activeTasks.set(taskId, {
+                        taskId: taskId,
                         title: task.title,
                         type: 'single'
                     });
@@ -2732,7 +2734,8 @@
 
         // Create task element HTML
         function createTaskElement(task, taskInfo = null, showDeleteButton = false) {
-            const isActive = activeTasks.has(task.id);
+            const taskId = task._id || task.id; // Use _id from MongoDB or fallback to id
+            const isActive = activeTasks.has(taskId);
             const statusClass = task.status.toLowerCase();
             
             return `
@@ -2758,12 +2761,12 @@
                     </div>
                     <div class="task-actions">
                         ${task.status === 'success' ? `
-                            <button class="btn-mini success" onclick="showTaskResult('${task.id}')">
+                            <button class="btn-mini success" onclick="showTaskResult('${taskId}')">
                                 📋 Results
                             </button>
                         ` : ''}
                         ${task.status === 'failure' && showDeleteButton ? `
-                            <button class="btn-mini danger" onclick="deleteTask('${task.id}')">
+                            <button class="btn-mini danger" onclick="deleteTask('${taskId}')">
                                 🗑️ Delete
                             </button>
                         ` : ''}
@@ -2863,10 +2866,6 @@
             
             if (!taskId || taskId === 'undefined') {
                 alert('Invalid task ID. Cannot delete task.');
-                return;
-            }
-            
-            if (!confirm('Are you sure you want to delete this failed task?')) {
                 return;
             }
             
@@ -2993,9 +2992,10 @@
                             
                             for (const task of processingTasks) {
                                 // Only add task if it has a valid task_id
-                                if (task && task.id && task.id !== 'undefined') {
-                                    activeTasks.set(task.id, {
-                                        taskId: task.id,
+                                const taskId = task._id || task.id;
+                                if (task && taskId && taskId !== 'undefined') {
+                                    activeTasks.set(taskId, {
+                                        taskId: taskId,
                                         title: getTaskDisplayTitle(task),
                                         type: 'single'
                                     });
