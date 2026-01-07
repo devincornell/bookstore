@@ -2958,50 +2958,29 @@
             }
         }
 
-        // Load working and failed tasks specifically
+        // Load working and failed tasks in a single efficient request
         async function loadWorkingAndFailedTasks() {
             try {
-                console.log('Loading working and failed tasks...');
+                console.log('Loading tasks...');
                 
-                // Load both working and failed tasks
-                const [workingResponse, failedResponse] = await Promise.all([
-                    fetch(`${API_BASE}/research/tasks/list_working`),
-                    fetch(`${API_BASE}/research/tasks/list_failed`)
-                ]);
+                // Get all tasks in one request - much more efficient!
+                const response = await fetch(`${API_BASE}/research/tasks/list`);
+                console.log('Tasks response status:', response.status);
 
-                console.log('Working response status:', workingResponse.status);
-                console.log('Failed response status:', failedResponse.status);
-
-                let workingData = { tasks: [] };
-                let failedData = { tasks: [] };
-
-                // Handle working tasks response
-                if (workingResponse.ok) {
-                    try {
-                        workingData = await workingResponse.json();
-                        console.log('Working tasks data:', workingData);
-                    } catch (jsonError) {
-                        console.error('Error parsing working tasks JSON:', jsonError);
-                    }
-                } else {
-                    console.warn('Working tasks request failed:', workingResponse.status, workingResponse.statusText);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
-                // Handle failed tasks response  
-                if (failedResponse.ok) {
-                    try {
-                        failedData = await failedResponse.json();
-                        console.log('Failed tasks data:', failedData);
-                    } catch (jsonError) {
-                        console.error('Error parsing failed tasks JSON:', jsonError);
-                    }
-                } else {
-                    console.warn('Failed tasks request failed:', failedResponse.status, failedResponse.statusText);
-                }
+                const data = await response.json();
+                const allTasks = data.tasks || [];
                 
-                const allTasks = [...(workingData.tasks || []), ...(failedData.tasks || [])];
-                console.log('Combined tasks:', allTasks);
-                displayAllTasks(allTasks);
+                // Filter to only working and failed tasks on the frontend
+                const relevantTasks = allTasks.filter(task => 
+                    task.status === 'working' || task.status === 'failure'
+                );
+                
+                console.log(`Loaded ${relevantTasks.length} relevant tasks (${allTasks.length} total)`);
+                displayAllTasks(relevantTasks);
                 
             } catch (error) {
                 console.error('Error loading tasks:', error);
