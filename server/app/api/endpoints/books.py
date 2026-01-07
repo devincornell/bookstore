@@ -131,6 +131,6 @@ def mount_mcp_apps(router: APIRouter|FastAPI) -> None:
     sse_app = mcp_app.sse_app()
     streamable_app = mcp_app.streamable_http_app()
     router.mount('/mcp/sse/', sse_app)
-    router.mount('/mcp/streamable/', streamable_app)
+    router.mount('/mcp/streamable/', streamable_app) # access at /mcp/streamable/mcp
 
 
