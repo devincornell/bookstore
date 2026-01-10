@@ -4,7 +4,6 @@
 PYTHON = ../.venv/bin/python
 PIP = ../.venv/bin/uv pip
 UVICORN = ../.venv/bin/uvicorn
-ALEMBIC = ../.venv/bin/alembic
 
 # Default target
 .DEFAULT_GOAL := help
@@ -16,7 +15,7 @@ YELLOW = \033[0;33m
 BLUE = \033[0;34m
 NC = \033[0m # No Color
 
-.PHONY: help setup install migration migrate-create migrate-upgrade migrate-downgrade run dev test clean lint format check-env
+.PHONY: help setup install run dev test clean lint format check-env
 
 help: ## Show this help message
 	@echo "$(BLUE)Bookstore FastAPI Server - Available Commands:$(NC)"
@@ -29,10 +28,8 @@ setup: ## Complete project setup (install dependencies, copy env file)
 	@$(MAKE) check-env
 	@echo "$(GREEN)✓ Project setup complete!$(NC)"
 	@echo "$(BLUE)Next steps:$(NC)"
-	@echo "  1. Edit .env file with your database credentials"
-	@echo "  2. Run 'make migrate-create' to create initial migration"
-	@echo "  3. Run 'make migrate-upgrade' to apply migrations"
-	@echo "  4. Run 'make dev' to start the development server"
+	@echo "  1. Edit .env file with your MongoDB and API credentials"
+	@echo "  2. Run 'make dev' to start the development server"
 
 install: ## Install Python dependencies
 	@echo "$(YELLOW)Installing dependencies...$(NC)"
@@ -42,35 +39,10 @@ check-env: ## Check if .env file exists, create from template if not
 	@if [ ! -f .env ]; then \
 		echo "$(YELLOW)Creating .env file from template...$(NC)"; \
 		cp .env.example .env; \
-		echo "$(GREEN)✓ .env file created. Please edit it with your database credentials.$(NC)"; \
+		echo "$(GREEN)✓ .env file created. Please edit it with your MongoDB and API credentials.$(NC)"; \
 	else \
 		echo "$(GREEN)✓ .env file already exists.$(NC)"; \
 	fi
-
-migration: migrate-create ## Alias for migrate-create
-
-migrate-create: ## Create a new database migration
-	@echo "$(YELLOW)Creating new migration...$(NC)"
-	@$(ALEMBIC) revision --autogenerate -m "$(if $(MSG),$(MSG),Auto-generated migration)"
-	@echo "$(GREEN)✓ Migration created successfully!$(NC)"
-
-migrate-upgrade: ## Apply database migrations
-	@echo "$(YELLOW)Applying database migrations...$(NC)"
-	@$(ALEMBIC) upgrade head
-	@echo "$(GREEN)✓ Migrations applied successfully!$(NC)"
-
-migrate-downgrade: ## Downgrade database by one migration
-	@echo "$(YELLOW)Downgrading database...$(NC)"
-	@$(ALEMBIC) downgrade -1
-	@echo "$(GREEN)✓ Database downgraded successfully!$(NC)"
-
-migrate-history: ## Show migration history
-	@echo "$(BLUE)Migration history:$(NC)"
-	@$(ALEMBIC) history
-
-migrate-current: ## Show current migration
-	@echo "$(BLUE)Current migration:$(NC)"
-	@$(ALEMBIC) current
 
 run: ## Run the server in production mode
 	@echo "$(YELLOW)Starting production server...$(NC)"
@@ -102,12 +74,6 @@ clean: ## Clean up cache files
 	@find . -type d -name "*.egg-info" -exec rm -rf {} +
 	@echo "$(GREEN)✓ Cleanup complete!$(NC)"
 
-db-reset: ## Reset database (downgrade all, then upgrade)
-	@echo "$(RED)Resetting database...$(NC)"
-	@$(ALEMBIC) downgrade base
-	@$(ALEMBIC) upgrade head
-	@echo "$(GREEN)✓ Database reset complete!$(NC)"
-
 logs: ## View application logs (if running with docker)
 	@echo "$(BLUE)Application logs:$(NC)"
 	@tail -f app.log 2>/dev/null || echo "No log file found"
@@ -119,7 +85,7 @@ requirements: ## Update requirements.txt
 
 shell: ## Open Python shell with app context
 	@echo "$(YELLOW)Opening Python shell...$(NC)"
-	@$(PYTHON) -c "from app.database import SessionLocal; from app.models import *; print('Database session available as SessionLocal()')"
+	@$(PYTHON) -c "from app.mongo_models.models import *; print('MongoDB models available')"
 
 # Development helpers
 install-dev: ## Install development dependencies
@@ -127,8 +93,6 @@ install-dev: ## Install development dependencies
 	@$(PIP) install black flake8 pytest pytest-asyncio httpx
 	@echo "$(GREEN)✓ Development dependencies installed!$(NC)"
 
-quick-start: ## Quick start: setup + migrate + run
+quick-start: ## Quick start: setup + run
 	@$(MAKE) setup
-	@$(MAKE) migrate-create MSG="Initial migration"
-	@$(MAKE) migrate-upgrade
 	@$(MAKE) dev
