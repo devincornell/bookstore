@@ -2,53 +2,35 @@ from __future__ import annotations
 from typing import List, Optional
 from datetime import datetime
 import typing
-#from beanie import Document, Indexed, Link
-import beanie
-import beanie.exceptions
-from pydantic import Field, BaseModel
 import pydantic
 import pymongo
-import pymongo.errors
 import asyncio
-import motor
-#from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from beanie import init_beanie
 import os
 import typing
 import tqdm
 import random
 import pydantic
 import pathlib
+import dataclasses
 
 from app.core.config import app_settings
 from app.ai import BookResearchInfo, ResearchSource, BookResearchOutput, BookResearchService
 
+from .collection_base import CollectionBase
 
-class SearchResult(BaseModel):
+class SearchResult(pydantic.BaseModel):
     text: str
     source_url: str
     score: float  # Automatically mapped from vectorSearchScore
 
-class BookResearch(beanie.Document):
-    title: str = pydantic.Field(description="The full standard title of the book, not including subtitle or information about the series.")
-    authors: list[str] = pydantic.Field(description="The authors' names. Not pen initials, and names should be in order - don't do 'last name, first name' format)")
-    publication_year: int = pydantic.Field(description="The year the book was published")
-
-    provided_title: str = pydantic.Field(description="The title of the book as provided in the research request")
-    provided_other_info: str|None = pydantic.Field(description="Other information about the book that could be used to identify the correct book. Could include author, publication date, etc.")
-    
-    research_output: BookResearchOutput = pydantic.Field(description="Comprehensive researched information about the book")
-    embedding: list[float] = pydantic.Field(description="Embedding vector representing the book information")
-    
-    class Settings:
-        name = "book_research"  # The collection name in MongoDB
-        indexes = [
-            pymongo.IndexModel(
-                [("title", pymongo.ASCENDING), ("publication_year", pymongo.DESCENDING)],
-                unique=True,
-                name="title_publication_year_unique" # Giving it an explicit name helps debugging
-            )
-        ]
+class BookCollection(CollectionBase):
+        
+    async def create_indexes(self):
+        '''Create a unique index on title to speed up upserts.'''
+        await self._collection.create_index(
+            [("title", pymongo.ASCENDING), ("publication_year", pymongo.DESCENDING)], 
+            unique=True
+        )
 
     @classmethod
     async def add_search_index(cls, db: pymongo.AsyncMongoClient) -> None:
@@ -126,8 +108,21 @@ class BookResearch(beanie.Document):
         # The 'projection_model' makes this elegant by returning Pydantic objects
         return await cls.aggregate(pipeline, projection_model=BookResearchWithSimilarity).to_list()
     
-class BookResearchWithSimilarity(BaseModel):
-    book: BookResearchInfo = pydantic.Field(description="The researched book document")
+
+class BookDoc(pydantic.BaseModel):
+    title: str = pydantic.Field(description="The full standard title of the book, not including subtitle or information about the series.")
+    authors: list[str] = pydantic.Field(description="The authors' names. Not pen initials, and names should be in order - don't do 'last name, first name' format)")
+    publication_year: int = pydantic.Field(description="The year the book was published")
+
+    provided_title: str = pydantic.Field(description="The title of the book as provided in the research request")
+    provided_other_info: str|None = pydantic.Field(description="Other information about the book that could be used to identify the correct book. Could include author, publication date, etc.")
+    
+    research_output: BookResearchOutput = pydantic.Field(description="Comprehensive researched information about the book")
+    embedding: list[float] = pydantic.Field(description="Embedding vector representing the book information")
+
+
+class BookResearchWithSimilarity(pydantic.BaseModel):
+    book: BookDoc = pydantic.Field(description="The researched book document")
     similarity: float = pydantic.Field(description="Similarity score from vector search")
 
 
