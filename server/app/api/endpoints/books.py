@@ -11,13 +11,11 @@ from mcp.server import FastMCP
 import logging
 
 
-from app.core.config import app_settings
+from app.api.deps import get_book_manager
+
 from app.mongo_models import (
-    BookResearch, 
-    init_beanie_models, 
-    ResearchTask, 
-    TaskStatusEnum, 
     BookResearchWithSimilarity,
+    BookManager,
 )
 from app.ai import (
     BookResearchService, 
@@ -38,9 +36,9 @@ mcp_app = FastMCP('Test tools.', stateless_http = True)
 
 @router.get("/recommend", response_model=BookRecommendOutput)
 async def books_recommend(
-    recommend_criteria: Optional[str] = Query(None, description="Criteria for recommending books")
+    recommend_criteria: Optional[str] = Query(None, description="Criteria for recommending books"),
+    book_manager: BookResearchService = Depends(get_book_manager)
 ) -> BookRecommendOutput:
-    await init_beanie_models()
     books = await BookResearch.find_all().to_list()
     return await ai_services.recommend.recommend_books(
         recommend_criteria=recommend_criteria,

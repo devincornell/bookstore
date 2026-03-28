@@ -8,6 +8,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from pymongo import AsyncMongoClient
 
+
+
+from app.db.mongodb import db_manager
+
 from .mongo_models import BookManager
 from app.core import app_settings, get_book_manager, book_db
 from app.api.endpoints import (
@@ -18,7 +22,16 @@ from app.api.endpoints import (
     extract_router,
 )
 
-
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Logic from the manager
+    await db_manager.connect_to_mongo(
+        uri=app_settings.MONGODB_URL, 
+        db_name=app_settings.MONGODB_DB_NAME
+    )
+    yield
+    # Shutdown: Logic from the manager
+    await db_manager.close_mongo_connection()
 
 def create_app() -> FastAPI:
 
@@ -29,7 +42,7 @@ def create_app() -> FastAPI:
         version="1.0.0",
         #docs_url="/docs",
         #redoc_url="/redoc"
-        lifespan=book_db.lifespan,
+        lifespan=lifespan,
     )
 
     # Configure templates
