@@ -25,31 +25,20 @@ class SearchResult(pydantic.BaseModel):
 
 class BookCollection(CollectionBase):
         
-    async def create_indexes(self):
+    async def create_indexes(self, vector_index_name: str = "vector_index"):
         '''Create a unique index on title to speed up upserts.'''
         await self._collection.create_index(
             [("title", pymongo.ASCENDING), ("publication_year", pymongo.DESCENDING)], 
             unique=True
         )
-
-    @classmethod
-    async def add_search_index(cls, db: pymongo.AsyncMongoClient) -> None:
-        '''Create the vector search index on the embedding field.'''
-        collection_name = cls.get_settings().name
         
-        try:
-            await db.create_collection(collection_name)
-        except pymongo.errors.CollectionInvalid:
-            pass  # Collection already exists
-        
-        collection = db[collection_name]
-
-        existing_coroutine = await collection.list_search_indexes()
+        existing_coroutine = await self._collection.list_search_indexes()
         existing = await existing_coroutine.to_list(length=10)
+        print("Existing search indexes:", existing)
 
-        if not any(i['name'] == 'vector_index' for i in existing):
-            await collection.create_search_index({
-                "name": "vector_index",
+        if not any(i['name'] == vector_index_name for i in existing):
+            await self._collection.create_search_index({
+                "name": vector_index_name,
                 "type": "vectorSearch",
                 "definition": {
                     "fields": [
@@ -64,9 +53,8 @@ class BookCollection(CollectionBase):
                 }
             })
         
-    @classmethod
-    async def insert_book(cls, provided_title: str, provided_other_info: str|None, research_output: BookResearchOutput, embedding: list[float]) -> typing.Self:
-        research = cls(
+    async def insert_book(self, provided_title: str, provided_other_info: str|None, research_output: BookResearchOutput, embedding: list[float]) -> typing.Self:
+        research = BookDoc(
             title = research_output.info.title,
             authors = research_output.info.authors,
             publication_year = research_output.info.publication_year,
@@ -75,8 +63,7 @@ class BookCollection(CollectionBase):
             research_output=research_output,
             embedding=embedding,
         )
-        await research.insert()
-        return research
+        return await self._collection.insert_one(research.model_dump())
     
     @classmethod
     async def vector_similarity(cls, query_vector: List[float], limit: int = 5) -> list[BookResearchWithSimilarity]:
@@ -89,20 +76,10 @@ class BookCollection(CollectionBase):
                     "queryVector": query_vector,
                     "numCandidates": limit * 10,
                     "limit": limit,
-                    #"filter": { # example showing how to filter on additional attributes
-                    #    "$and": [
-                    #        {"user_id": user_id},
-                    #        {"is_archived": False}
-                    #    ]
-                    #}
                 }
             },
             {
-                "$project": {
-                    "_id": 0,
-                    "book": "$research_output.info",
-                    "similarity": {"$meta": "vectorSearchScore"}
-                }
+                "$project": BookResearchWithSimilarity.project()
             }
         ]
         # The 'projection_model' makes this elegant by returning Pydantic objects
@@ -124,6 +101,15 @@ class BookDoc(pydantic.BaseModel):
 class BookResearchWithSimilarity(pydantic.BaseModel):
     book: BookDoc = pydantic.Field(description="The researched book document")
     similarity: float = pydantic.Field(description="Similarity score from vector search")
+
+    @staticmethod
+    def project() -> dict[str,str|int|list[float]]:
+        '''Projection definition for MongoDB aggregation to return this model.'''
+        return {
+            "_id": 0,
+            "book": "$research_output.info",
+            "similarity": {"$meta": "vectorSearchScore"}
+        }
 
 
 

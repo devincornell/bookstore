@@ -3,17 +3,23 @@ API endpoints for book research functionality using pydantic-ai
 """
 import typing
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, BackgroundTasks
+
 import pydantic
-import pymongo
-from sqlalchemy.orm import Session
-from typing import Optional, List
 from pydantic import BaseModel, Field
+import pymongo
 import pymongo.errors
 
 from app.core.config import app_settings
 #from app.database import get_db
 #from app.models import BookStoreDB
-from app.mongo_models import BookResearch, init_beanie_models, ResearchTask, TaskStatusEnum
+from ...mongo_models import (
+    BookCollection, 
+    BookDoc, 
+    ResearchTaskCollection, 
+    ResearchTaskDoc, 
+    TaskStatus
+)
+
 from app.ai import (
     BookResearchService, 
     BookResearchOutput, 

@@ -1,8 +1,5 @@
-from .book_research import BookResearch, BookResearchWithSimilarity
-from .research_task import ResearchTask, TaskStatusEnum
+from .book_manager import BookManager
 
-from .models import (
-    init_beanie_models, 
-    get_database_client, 
-    close_database_connection
-)
+from .book_research import BookCollection, BookDoc, BookResearchWithSimilarity
+from .research_task import ResearchTaskCollection, ResearchTaskDoc, TaskStatus
+

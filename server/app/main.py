@@ -4,21 +4,52 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 #from app.api.endpoints.books import router as books_router
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Depends
+from pymongo import AsyncMongoClient
 
 
 from app.core.config import app_settings
 from app.api.endpoints import (
-    books_router, mount_mcp_apps, mcp_app,
+    books_router, 
+    mount_mcp_apps, 
+    mcp_app,
     research_router,
     extract_router,
 )
 
+class DatabaseManager:
+    def __init__(self, uri: str, db_name: str):
+        self.uri = uri
+        self.db_name = db_name
+        self.client: AsyncMongoClient = None
+        self.db = None
+
+    @asynccontextmanager
+    async def lifespan(self, app: FastAPI):
+        self.client = AsyncMongoClient(self.uri, maxPoolSize=50)
+        self.db = self.client[self.db_name]
+        
+        try:
+            await self.client.admin.command('ping')
+            yield
+        finally:
+            # 2. Teardown: Close when the app stops
+            if self.client:
+                self.client.close()
+
+# Initialize the manager instance
+db_manager = DatabaseManager(
+    uri=app_settings.MONGODB_URL, 
+    db_name=app_settings.MONGODB_DB_NAME
+)
+
+# Dependency to get the database instance in routes
+async def get_db():
+    return db_manager.db
+
 
 def create_app() -> FastAPI:
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        async with mcp_app.session_manager.run():
-            yield
 
     # Create FastAPI instance
     app = FastAPI(
@@ -27,7 +58,7 @@ def create_app() -> FastAPI:
         version="1.0.0",
         #docs_url="/docs",
         #redoc_url="/redoc"
-        lifespan=lifespan,
+        lifespan=db_manager.lifespan,
     )
 
     # Configure templates
@@ -42,12 +73,6 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Include routers
-    #app.include_router(
-    #    books_router, 
-    #    prefix="/books", 
-    #    tags=["books"]
-    #)
     mount_mcp_apps(app)
 
     app.include_router(
@@ -68,16 +93,7 @@ def create_app() -> FastAPI:
         tags=["extract"]
     )
 
-    @app.get("/")
-    def read_root():
-        """Root endpoint"""
-        return {
-            "message": "Welcome to the Bookstore API",
-            "docs": "/docs",
-            "redoc": "/redoc"
-        }
-
-    @app.get("/bookstore", response_class=HTMLResponse)
+    @app.get("/", response_class=HTMLResponse)
     async def bookstore_frontend(request: Request):
         """Serve the bookstore frontend HTML page"""
         return templates.TemplateResponse("bookstore.html", {"request": request})

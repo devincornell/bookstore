@@ -16,6 +16,7 @@ import uuid
 from app.core.config import app_settings
 from app.ai import BookResearchOutput
 from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.asynchronous.database import AsyncDatabase
 
 
 class TaskStatus(str, enum.Enum):
@@ -32,9 +33,9 @@ class CollectionBase:
     collection_name: str
 
     @classmethod
-    def from_client(cls, client: pymongo.AsyncMongoClient, collection_name: str = "research_tasks") -> typing.Self:
+    def from_database(cls, db: AsyncDatabase, collection_name: str) -> typing.Self:
         '''Create a ResearchTaskCollection from a MongoDB database.'''
-        return cls.from_collection(collection=client[collection_name])
+        return cls.from_collection(collection=db[collection_name])
 
     @classmethod
     def from_collection(cls, collection: AsyncCollection) -> typing.Self:
@@ -45,3 +46,4 @@ class CollectionBase:
         '''Create a unique index on path_str to speed up prefix searches and upserts.'''
         #await self._collection.create_index("path_str", unique=True)
         raise NotImplementedError("create_indexes must be implemented by subclass")
+
