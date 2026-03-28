@@ -8,8 +8,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from pymongo import AsyncMongoClient
 
-
-from app.core.config import app_settings
+from .mongo_models import BookManager
+from app.core import app_settings, get_book_manager, book_db
 from app.api.endpoints import (
     books_router, 
     mount_mcp_apps, 
@@ -18,35 +18,6 @@ from app.api.endpoints import (
     extract_router,
 )
 
-class DatabaseManager:
-    def __init__(self, uri: str, db_name: str):
-        self.uri = uri
-        self.db_name = db_name
-        self.client: AsyncMongoClient = None
-        self.db = None
-
-    @asynccontextmanager
-    async def lifespan(self, app: FastAPI):
-        self.client = AsyncMongoClient(self.uri, maxPoolSize=50)
-        self.db = self.client[self.db_name]
-        
-        try:
-            await self.client.admin.command('ping')
-            yield
-        finally:
-            # 2. Teardown: Close when the app stops
-            if self.client:
-                self.client.close()
-
-# Initialize the manager instance
-db_manager = DatabaseManager(
-    uri=app_settings.MONGODB_URL, 
-    db_name=app_settings.MONGODB_DB_NAME
-)
-
-# Dependency to get the database instance in routes
-async def get_db():
-    return db_manager.db
 
 
 def create_app() -> FastAPI:
@@ -58,7 +29,7 @@ def create_app() -> FastAPI:
         version="1.0.0",
         #docs_url="/docs",
         #redoc_url="/redoc"
-        lifespan=db_manager.lifespan,
+        lifespan=book_db.lifespan,
     )
 
     # Configure templates
@@ -99,7 +70,7 @@ def create_app() -> FastAPI:
         return templates.TemplateResponse("bookstore.html", {"request": request})
 
     @app.get("/health")
-    def health_check():
+    async def health_check(book_manager: BookManager = Depends(get_book_manager)):
         """Health check endpoint"""
         return {"status": "healthy"}
     return app
