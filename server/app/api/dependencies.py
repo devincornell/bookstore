@@ -1,7 +1,3 @@
-from sqlalchemy.orm import Session
-from app.database import get_db
-
-
-# Dependency to get database session
-def get_database_session():
-    return get_db
+# API Dependencies
+# This file can be used for shared dependencies across API endpoints
+# Currently no shared dependencies are needed as all operations use MongoDB directly

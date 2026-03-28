@@ -1,0 +1,28 @@
+services:
+  # Main FastAPI application - connects to host MongoDB via IP
+  bookstore-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bookstore-app
+    ports:
+      - "8000:8000"
+    env_file:
+      - server/.env
+    # All environment variables are loaded from server/.env file
+    # No need to override them here since they're properly configured there
+    volumes:
+      # Mount Google Cloud credentials
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-./creds}:/app/creds:ro
+      # Mount templates for development
+      - ./server/templates:/app/templates
+    networks:
+      - bookstore-network
+    restart: unless-stopped
+    # Add extra host for compatibility
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  bookstore-network:
+    driver: bridge

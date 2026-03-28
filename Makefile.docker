@@ -1,0 +1,146 @@
+# Docker Makefile for Bookstore Application - Host-IP Approach
+# Connects Docker containers to host MongoDB via IP address
+
+# Docker variables
+DOCKER_COMPOSE = docker compose
+DOCKER_COMPOSE_PROD = docker compose -f docker-compose.yml -f docker-compose.prod.yml
+SERVICE_NAME = bookstore-app
+
+# Colors
+RED = \033[0;31m
+GREEN = \033[0;32m
+YELLOW = \033[0;33m
+BLUE = \033[0;34m
+NC = \033[0m # No Color
+
+.PHONY: docker-help docker-build docker-up docker-down docker-logs docker-clean
+
+docker-help: ## Show Docker-related commands
+	@echo "$(BLUE)Bookstore Docker Commands:$(NC)"
+	@echo ""
+	@grep -E '^docker-[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-20s$(NC) %s\n", $$1, $$2}'
+
+docker-build: ## Build Docker images
+	@echo "$(YELLOW)Building Docker images...$(NC)"
+	@$(DOCKER_COMPOSE) build
+	@echo "$(GREEN)✓ Docker images built successfully!$(NC)"
+
+docker-up: ## Start development services  
+	@echo "$(YELLOW)Starting development environment...$(NC)"
+	@$(DOCKER_COMPOSE) up -d
+	@echo "$(GREEN)✓ Services started!$(NC)"
+	@echo "$(BLUE)Access your application at: http://localhost:8000$(NC)"
+
+docker-up-build: ## Build and start services
+	@echo "$(YELLOW)Building and starting services...$(NC)"
+	@$(DOCKER_COMPOSE) up --build -d
+	@echo "$(GREEN)✓ Services built and started!$(NC)"
+
+docker-down: ## Stop all services
+	@echo "$(YELLOW)Stopping services...$(NC)"
+	@$(DOCKER_COMPOSE) down
+	@echo "$(GREEN)✓ Services stopped!$(NC)"
+
+docker-logs: ## View application logs
+	@echo "$(BLUE)Application logs (Ctrl+C to exit):$(NC)"
+	@$(DOCKER_COMPOSE) logs -f $(SERVICE_NAME)
+
+docker-logs-all: ## View all services logs  
+	@echo "$(BLUE)All services logs (Ctrl+C to exit):$(NC)"
+	@$(DOCKER_COMPOSE) logs -f
+
+docker-shell: ## Access application shell
+	@echo "$(YELLOW)Accessing application shell...$(NC)"
+	@$(DOCKER_COMPOSE) exec $(SERVICE_NAME) /bin/bash
+
+docker-python: ## Access Python shell in container
+	@echo "$(YELLOW)Opening Python shell...$(NC)"
+	@$(DOCKER_COMPOSE) exec $(SERVICE_NAME) python
+
+docker-clean: ## Clean up containers and volumes
+	@echo "$(YELLOW)Cleaning up Docker resources...$(NC)"
+	@$(DOCKER_COMPOSE) down -v
+	@docker system prune -f
+	@echo "$(GREEN)✓ Cleanup complete!$(NC)"
+
+docker-reset: ## Complete reset (remove everything)
+	@echo "$(RED)WARNING: This will remove all containers, volumes, and images!$(NC)"
+	@read -p "Are you sure? (y/N) " -n 1 -r; \
+	echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		$(DOCKER_COMPOSE) down -v; \
+		docker system prune -a -f; \
+		echo "$(GREEN)✓ Complete reset done!$(NC)"; \
+	else \
+		echo "$(YELLOW)Reset cancelled.$(NC)"; \
+	fi
+
+# Production commands
+docker-prod-up: ## Start production environment
+	@echo "$(YELLOW)Starting production environment...$(NC)"
+	@$(DOCKER_COMPOSE_PROD) up -d
+	@echo "$(GREEN)✓ Production services started!$(NC)"
+
+docker-prod-build: ## Build and start production environment
+	@echo "$(YELLOW)Building and starting production environment...$(NC)"
+	@$(DOCKER_COMPOSE_PROD) up --build -d
+	@echo "$(GREEN)✓ Production services built and started!$(NC)"
+
+docker-prod-down: ## Stop production environment
+	@echo "$(YELLOW)Stopping production environment...$(NC)"
+	@$(DOCKER_COMPOSE_PROD) down
+	@echo "$(GREEN)✓ Production services stopped!$(NC)"
+
+# Database commands
+docker-db: ## Access MongoDB database on host  
+	@echo "$(YELLOW)Connecting to host MongoDB...$(NC)"
+	@HOST_IP=$$(hostname -I | awk '{print $$1}'); \
+	echo "$(BLUE)Connecting to mongodb://$$HOST_IP:27017/bookstore$(NC)"; \
+	mongosh "mongodb://$$HOST_IP:27017/bookstore"
+
+# Setup and utilities
+docker-setup: ## Setup environment for host MongoDB connection
+	@echo "$(YELLOW)Checking environment setup...$(NC)"
+	@if [ -f server/.env ]; then \
+		echo "$(GREEN)✓ Found existing server/.env file$(NC)"; \
+		HOST_IP=$$(hostname -I | awk '{print $$1}'); \
+		if grep -q "mongodb://localhost:27017" server/.env; then \
+			echo "$(YELLOW)Updating MongoDB URL for Docker compatibility...$(NC)"; \
+			sed -i "s|mongodb://localhost:27017|mongodb://$$HOST_IP:27017|g" server/.env; \
+			echo "$(GREEN)✓ Updated MongoDB URL to use host IP ($$HOST_IP)$(NC)"; \
+		else \
+			echo "$(GREEN)✓ MongoDB URL already configured for Docker$(NC)"; \
+		fi; \
+	else \
+		echo "$(YELLOW)Creating new server/.env file...$(NC)"; \
+		mkdir -p server; \
+		HOST_IP=$$(hostname -I | awk '{print $$1}'); \
+		echo "MONGODB_URL=mongodb://$$HOST_IP:27017" > server/.env; \
+		echo "MONGODB_DB_NAME=bookstore" >> server/.env; \
+		echo "DEBUG=true" >> server/.env; \
+		echo "HOST=0.0.0.0" >> server/.env; \
+		echo "PORT=8000" >> server/.env; \
+		echo "SECRET_KEY=your-secret-key-here" >> server/.env; \
+		echo "$(GREEN)✓ Created server/.env with host IP ($$HOST_IP)$(NC)"; \
+		echo "$(BLUE)Add your Google Cloud credentials to server/.env$(NC)"; \
+	fi
+
+docker-get-ip: ## Get current host IP and check MongoDB URL
+	@echo "$(BLUE)Current host IP address:$(NC)"
+	@HOST_IP=$$(hostname -I | awk '{print $$1}'); echo "$$HOST_IP"
+	@echo "$(BLUE)MongoDB URL in server/.env:$(NC)"
+	@if [ -f server/.env ]; then \
+		grep "MONGODB_URL" server/.env || echo "$(RED)MONGODB_URL not found$(NC)"; \
+	else \
+		echo "$(RED)server/.env file not found$(NC)"; \
+	fi
+	@echo "$(YELLOW)Run 'make -f Makefile.docker docker-setup' if IP has changed$(NC)"
+
+# Status and monitoring
+docker-status: ## Show status of all services
+	@echo "$(BLUE)Service Status:$(NC)"
+	@$(DOCKER_COMPOSE) ps
+
+docker-health: ## Check application health
+	@echo "$(BLUE)Checking application health...$(NC)"
+	@curl -s http://localhost:8000/health | json_pp || echo "$(RED)Service not accessible$(NC)"

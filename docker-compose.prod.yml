@@ -1,0 +1,20 @@
+# Production overrides for host-ip docker-compose
+version: '3.8'
+
+services:
+  bookstore-app:
+    environment:
+      - DEBUG=false
+      # Production MongoDB connection - update IP as needed
+      - MONGODB_URL=${MONGODB_URL:-mongodb://192.168.1.100:27017}
+    restart: always
+    # Remove port exposure in production if behind reverse proxy
+    # ports: []
+    # Add resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          memory: 512M
