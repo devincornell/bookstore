@@ -79,7 +79,12 @@ class BookCollection(CollectionBase):
         return await cls.aggregate(pipeline, projection_model=BookResearchWithSimilarity).to_list()
 
 
-    async def insert_book(self, provided_title: str, provided_other_info: str|None, research_output: BookResearchOutput, embedding: list[float]) -> typing.Self:
+    async def insert_book(self, 
+        provided_title: str, 
+        provided_other_info: str|None, 
+        research_output: BookResearchOutput, 
+        embedding: list[float]
+    ) -> BookDoc:
         research = BookDoc(
             title = research_output.info.title,
             authors = research_output.info.authors,
@@ -89,7 +94,8 @@ class BookCollection(CollectionBase):
             research_output=research_output,
             embedding=embedding,
         )
-        return await self._collection.insert_one(research.model_dump())
+        await self._collection.insert_one(research.model_dump())
+        return research
     
     
 

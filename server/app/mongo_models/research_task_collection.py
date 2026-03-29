@@ -26,12 +26,43 @@ class TaskStatus(str, enum.Enum):
     FAILURE = "failure"
 
 
+class ResearchTaskDoesNotExist(Exception):
+    """Custom exception for when a research task is not found in the database."""
+    pass
+
 class ResearchTaskCollection(CollectionBase):
     """Document model for tracking asynchronous research tasks"""
 
     async def create_indexes(self):
         '''Create a unique index on title to speed up upserts.'''
         await self._collection.create_index("title", unique=True)
+
+    async def find_all(self) -> list[ResearchTaskDoc]:
+        '''Retrieve all research task documents from the collection.'''
+        cursor = await self._collection.find().to_list()
+        return [ResearchTaskDoc.model_validate(doc) for doc in cursor]
+    
+    async def find_by_status(self, status: TaskStatus) -> list[ResearchTaskDoc]:
+        """Find research tasks matching the given status."""
+        cursor = await self._collection.find({"status": status}).to_list()
+        return [ResearchTaskDoc.model_validate(doc) for doc in cursor]
+
+    async def find_task_by_id(self, task_id: str) -> ResearchTaskDoc | None:
+        """Retrieve a research task by its ID."""
+        data = await self._collection.find_one({"_id": task_id})
+        if data is None:
+            raise ResearchTaskDoesNotExist(f"Research task with ID {task_id} does not exist.")
+        return ResearchTaskDoc.model_validate(data)
+
+    async def delete_task_by_id(self, task_id: str) -> bool:
+        """Delete a research task by its ID. Returns True if deleted, False if not found."""
+        result = await self._collection.delete_one({"_id": task_id})
+        return result.deleted_count > 0
+    
+    async def delete_all(self) -> int:
+        """Delete all research tasks from the collection."""
+        result = await self._collection.delete_many({})
+        return result.deleted_count
 
     async def insert_new_research_task(
         self, 
