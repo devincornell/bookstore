@@ -17,6 +17,8 @@ from app.core.config import app_settings
 from app.mongo_models import (
     BookResearchWithSimilarity,
     BookManager,
+    BookDoc,
+    BookCollection,
 )
 from app.ai import (
     BookResearchService, 
@@ -51,7 +53,7 @@ class BookInfoResponse(BaseModel):
     info: BookResearchInfo = pydantic.Field(description="Detailed information about the researched book")
 
     @classmethod
-    def from_book_research(cls, book_research: BookResearch) -> "BookInfoResponse":
+    def from_book_research(cls, book_research: BookDoc) -> typing.Self:
         return cls(
             id=str(book_research.id),
             info=book_research.research_output.info

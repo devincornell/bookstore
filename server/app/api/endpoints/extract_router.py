@@ -8,14 +8,21 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from pydantic import BaseModel, Field
 
-from dotenv import load_dotenv
+
 import os
-load_dotenv()
 
 from app.core.config import app_settings
 #from app.database import get_db
 #from app.models import BookStoreDB
-from app.mongo_models import BookResearch, init_beanie_models, ResearchTask
+from app.mongo_models import (
+    BookCollection, 
+    BookDoc, 
+    ResearchTaskCollection, 
+    ResearchTaskDoc, 
+    TaskStatus,
+    BookManager,
+    ResearchTaskDoesNotExist,
+)
 from app.ai import (
     BookResearchService, 
     BookResearchOutput, 

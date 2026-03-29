@@ -46,7 +46,7 @@ check-env: ## Check if .env file exists, create from template if not
 
 run: ## Run the server in production mode
 	@echo "$(YELLOW)Starting production server...$(NC)"
-	@$(UVICORN) app.main:app --host 0.0.0.0 --port 8000
+	@$(UVICORN) app.main:app --host 0.0.0.0 --port 8001
 
 dev: ## Run the server in development mode with auto-reload
 	@echo "$(YELLOW)Starting development server...$(NC)"

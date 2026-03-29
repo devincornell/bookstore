@@ -1,7 +1,8 @@
 
 from fastapi import Depends
+
 from app.db.mongodb import db_manager
-from server.app.mongo_models.book_manager import BookManager
+from app.mongo_models import BookManager
 
 async def get_db():
     # Returns the database instance from our manager

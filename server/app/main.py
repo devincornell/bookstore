@@ -6,14 +6,13 @@ from fastapi.responses import HTMLResponse
 #from app.api.endpoints.books import router as books_router
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
-from pymongo import AsyncMongoClient
 
 
 
 from app.db.mongodb import db_manager
+from app.mongo_models import BookManager
+from app.core.config import app_settings
 
-from .mongo_models import BookManager
-from app.core import app_settings, get_book_manager, book_db
 from app.api.endpoints import (
     books_router, 
     mount_mcp_apps, 
@@ -57,12 +56,12 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    mount_mcp_apps(app)
+    #mount_mcp_apps(app)
 
     app.include_router(
-        books_router,
-        prefix="/books",
-        tags=["books"]
+        extract_router,
+        prefix="/extract",
+        tags=["extract"]
     )
 
     app.include_router(
@@ -71,11 +70,11 @@ def create_app() -> FastAPI:
         tags=["research"]
     )
 
-    app.include_router(
-        extract_router,
-        prefix="/extract",
-        tags=["extract"]
-    )
+    #app.include_router(
+    #    books_router,
+    #    prefix="/books",
+    #    tags=["books"]
+    #)
 
     @app.get("/", response_class=HTMLResponse)
     async def bookstore_frontend(request: Request):
@@ -83,7 +82,7 @@ def create_app() -> FastAPI:
         return templates.TemplateResponse("bookstore.html", {"request": request})
 
     @app.get("/health")
-    async def health_check(book_manager: BookManager = Depends(get_book_manager)):
+    async def health_check():
         """Health check endpoint"""
         return {"status": "healthy"}
     return app

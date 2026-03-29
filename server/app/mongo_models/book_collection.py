@@ -77,8 +77,7 @@ class BookCollection(CollectionBase):
         ]
         # The 'projection_model' makes this elegant by returning Pydantic objects
         return await cls.aggregate(pipeline, projection_model=BookResearchWithSimilarity).to_list()
-
-
+    
     async def insert_book(self, 
         provided_title: str, 
         provided_other_info: str|None, 

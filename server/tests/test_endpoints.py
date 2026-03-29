@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Any
 
 # Base URL for the API (adjust if your server runs on a different port)
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://localhost:8001"
 
 def test_get_research():
     """Test the GET /research endpoint"""
@@ -67,7 +67,7 @@ def test_get_extract_books():
     """Test the GET /extract_books endpoint"""
     print("Testing GET /extract_books endpoint...")
     
-    url = f"{BASE_URL}/research/extract_books"
+    url = f"{BASE_URL}/extract/from_text"
     
     try:
         response = requests.get(url, params={"book_list_unstructured": "The Great Gatsby by F. Scott Fitzgerald, 1984 by George Orwell"})
@@ -182,11 +182,11 @@ def main():
     print()
     
     # Test both endpoints
-    #test_get_research()
     #test_get_extract_books()
+    test_post_research_and_insert_async()
+    #test_get_research()
     #test_get_list_books()
     #test_post_research_and_insert()
-    test_post_research_and_insert_async()
     
     print("Test script completed!")
 

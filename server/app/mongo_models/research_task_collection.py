@@ -18,17 +18,13 @@ from app.ai import BookResearchOutput
 from pymongo.asynchronous.collection import AsyncCollection
 
 from .collection_base import CollectionBase
+from .errors import ResearchTaskDoesNotExist
 
 class TaskStatus(str, enum.Enum):
     """Enum for research task status"""
     WORKING = "working"
     SUCCESS = "success"
     FAILURE = "failure"
-
-
-class ResearchTaskDoesNotExist(Exception):
-    """Custom exception for when a research task is not found in the database."""
-    pass
 
 class ResearchTaskCollection(CollectionBase):
     """Document model for tracking asynchronous research tasks"""
@@ -63,6 +59,16 @@ class ResearchTaskCollection(CollectionBase):
         """Delete all research tasks from the collection."""
         result = await self._collection.delete_many({})
         return result.deleted_count
+    
+    async def update_task_status(self, task_id: str, new_status: TaskStatus, reason: str|None = None) -> ResearchTaskDoc:
+        """Update the status of a research task by its ID."""
+        update_data = {"status": new_status}
+        if reason is not None:
+            update_data["reason"] = reason
+        result = await self._collection.update_one({"_id": task_id}, {"$set": update_data})
+        if result.matched_count == 0:
+            raise ResearchTaskDoesNotExist(f"Research task with ID {task_id} does not exist.")
+        return await self.find_task_by_id(task_id)
 
     async def insert_new_research_task(
         self, 
@@ -70,7 +76,7 @@ class ResearchTaskCollection(CollectionBase):
         other_info: str|None = None,
         status: TaskStatus = TaskStatus.WORKING,
         reason: str|None = None,
-    ) -> typing.Self:
+    ) -> tuple[int, ResearchTaskDoc]:
         """Create a new single book research task"""        
         task = ResearchTaskDoc(
             title=title,
@@ -79,15 +85,18 @@ class ResearchTaskCollection(CollectionBase):
             started_at=datetime.now(),
             reason=reason,
         )
-        return await self.upsert_research_task(task)
+        inserted_id = await self.upsert_research_task(task)
+        return inserted_id, task
     
-    async def upsert_research_task(self, doc: ResearchTaskDoc):
+    async def upsert_research_task(self, doc: ResearchTaskDoc) -> ResearchTaskDoc:
         """Update existing record by title or insert a new one."""
         await self._collection.replace_one(
             filter={"title": doc.title},
             replacement=doc.model_dump(), # Pydantic v2 dict conversion
             upsert=True
         )
+        inserted_doc = await self._collection.find_one({"title": doc.title}, {"_id": 1})
+        return inserted_doc['_id']
 
 
 class ResearchTaskDoc(pydantic.BaseModel):

@@ -4,8 +4,8 @@ from typing import Optional
 import pymongo
 
 from app.core.config import app_settings
-from .books import BookResearch
-from .research_task import ResearchTask
+from .book_collection import BookResearch
+from .research_task_collection import ResearchTask
 
 
 async def close_database_connection():
