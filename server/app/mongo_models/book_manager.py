@@ -5,8 +5,8 @@ import pymongo
 from pymongo.asynchronous.database import AsyncDatabase
 import contextlib
 
-from .book_research import BookCollection, BookDoc
-from .research_task import ResearchTaskCollection, ResearchTaskDoc, TaskStatus
+from .book_collection import BookCollection, BookDoc
+from .research_task_collection import ResearchTaskCollection, ResearchTaskDoc, TaskStatus
 
 
 @dataclasses.dataclass
