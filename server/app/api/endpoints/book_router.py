@@ -12,6 +12,7 @@ import logging
 
 
 from app.api.deps import get_book_manager
+from app.core.config import app_settings
 
 from app.mongo_models import (
     BookResearchWithSimilarity,
@@ -37,9 +38,9 @@ mcp_app = FastMCP('Test tools.', stateless_http = True)
 @router.get("/recommend", response_model=BookRecommendOutput)
 async def books_recommend(
     recommend_criteria: Optional[str] = Query(None, description="Criteria for recommending books"),
-    book_manager: BookResearchService = Depends(get_book_manager)
+    book_manager: BookManager = Depends(get_book_manager)
 ) -> BookRecommendOutput:
-    books = await BookResearch.find_all().to_list()
+    books = await book_manager.find_all()
     return await ai_services.recommend.recommend_books(
         recommend_criteria=recommend_criteria,
         book_info=[br.research_output.info for br in books],
