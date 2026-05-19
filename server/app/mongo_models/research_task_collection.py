@@ -18,7 +18,9 @@ from app.ai import BookResearchOutput
 from pymongo.asynchronous.collection import AsyncCollection
 
 from .collection_base import CollectionBase
-from .errors import ResearchTaskDoesNotExist
+from .errors import ResearchTaskDoesNotExist, ResearchTaskAlreadyExists
+
+ResearchTaskID = str
 
 class TaskStatus(str, enum.Enum):
     """Enum for research task status"""
@@ -33,24 +35,35 @@ class ResearchTaskCollection(CollectionBase):
         '''Create a unique index on title to speed up upserts.'''
         await self._collection.create_index("title", unique=True)
 
-    async def find_all(self) -> list[ResearchTaskDoc]:
+    async def find_all(self) -> list[tuple[ResearchTaskID, ResearchTaskDoc]]:
         '''Retrieve all research task documents from the collection.'''
-        cursor = await self._collection.find().to_list()
-        return [ResearchTaskDoc.model_validate(doc) for doc in cursor]
+        return await self.find_tasks({})
     
-    async def find_by_status(self, status: TaskStatus) -> list[ResearchTaskDoc]:
+    async def find_tasks_by_status(self, status: TaskStatus) -> list[tuple[ResearchTaskID, ResearchTaskDoc]]:
         """Find research tasks matching the given status."""
-        cursor = await self._collection.find({"status": status}).to_list()
-        return [ResearchTaskDoc.model_validate(doc) for doc in cursor]
+        return await self.find_tasks({"status": status.value})
+    
+    async def find_tasks(self, filter: dict[str, Any]) -> list[tuple[ResearchTaskID, ResearchTaskDoc]]:
+        """Find research tasks matching the given filter."""
+        cursor = await self._collection.find(filter).to_list()
+        return [(str(doc["_id"]), ResearchTaskDoc.model_validate(doc)) for doc in cursor]
+    
+    async def find_task_by_title(self, title: str) -> tuple[ResearchTaskID, ResearchTaskDoc]:
+        """Retrieve a research task by its title."""
+        return await self.find_task({"title": title})
 
-    async def find_task_by_id(self, task_id: str) -> ResearchTaskDoc | None:
+    async def find_task_by_id(self, task_id: str) -> tuple[ResearchTaskID, ResearchTaskDoc]:
         """Retrieve a research task by its ID."""
-        data = await self._collection.find_one({"_id": task_id})
+        return await self.find_task({"_id": task_id})
+    
+    async def find_task(self, filter: dict[str, Any]) -> tuple[ResearchTaskID, ResearchTaskDoc]:
+        """Find a research task matching the given filter."""
+        data = await self._collection.find_one(filter)
         if data is None:
-            raise ResearchTaskDoesNotExist(f"Research task with ID {task_id} does not exist.")
-        return ResearchTaskDoc.model_validate(data)
+            raise ResearchTaskDoesNotExist(f"Research task matching {filter} does not exist.")
+        return str(data["_id"]), ResearchTaskDoc.model_validate(data)
 
-    async def delete_task_by_id(self, task_id: str) -> bool:
+    async def delete_task_by_id(self, task_id: ResearchTaskID) -> bool:
         """Delete a research task by its ID. Returns True if deleted, False if not found."""
         result = await self._collection.delete_one({"_id": task_id})
         return result.deleted_count > 0
@@ -59,6 +72,24 @@ class ResearchTaskCollection(CollectionBase):
         """Delete all research tasks from the collection."""
         result = await self._collection.delete_many({})
         return result.deleted_count
+    
+    async def update_task_success(self, task_id: str) -> ResearchTaskDoc:
+        """Mark a research task as successful by its ID."""
+        return await self.update_task_status(task_id, TaskStatus.SUCCESS)
+    
+    async def update_task_failure(self, task_id: str, reason: str) -> ResearchTaskDoc:
+        """Mark a research task as failed by its ID, with an optional reason."""
+        return await self.update_task_status(task_id, TaskStatus.FAILURE, reason=reason)
+
+    async def update_task_status_by_title(self, title: str, new_status: TaskStatus, reason: str|None = None) -> ResearchTaskDoc:
+        """Update the status of a research task by its title."""
+        update_data = {"status": new_status}
+        if reason is not None:
+            update_data["reason"] = reason
+        result = await self._collection.update_one({"title": title}, {"$set": update_data})
+        if result.matched_count == 0:
+            raise ResearchTaskDoesNotExist(f"Research task with title '{title}' does not exist.")
+        return await self.find_task_by_title(title)
     
     async def update_task_status(self, task_id: str, new_status: TaskStatus, reason: str|None = None) -> ResearchTaskDoc:
         """Update the status of a research task by its ID."""
@@ -76,8 +107,8 @@ class ResearchTaskCollection(CollectionBase):
         other_info: str|None = None,
         status: TaskStatus = TaskStatus.WORKING,
         reason: str|None = None,
-    ) -> tuple[int, ResearchTaskDoc]:
-        """Create a new single book research task"""        
+    ) -> tuple[str, ResearchTaskDoc]:
+        """Create a new single book research task"""
         task = ResearchTaskDoc(
             title=title,
             other_info=other_info,
@@ -85,10 +116,10 @@ class ResearchTaskCollection(CollectionBase):
             started_at=datetime.now(),
             reason=reason,
         )
-        inserted_id = await self.upsert_research_task(task)
+        inserted_id = await self.insert_task(task)
         return inserted_id, task
     
-    async def upsert_research_task(self, doc: ResearchTaskDoc) -> ResearchTaskDoc:
+    async def upsert_task(self, doc: ResearchTaskDoc) -> str:
         """Update existing record by title or insert a new one."""
         await self._collection.replace_one(
             filter={"title": doc.title},
@@ -97,6 +128,14 @@ class ResearchTaskCollection(CollectionBase):
         )
         inserted_doc = await self._collection.find_one({"title": doc.title}, {"_id": 1})
         return inserted_doc['_id']
+    
+    async def insert_task(self, doc: ResearchTaskDoc) -> str:
+        """Insert a new research task document into the collection."""
+        try:
+            result = await self._collection.insert_one(doc.model_dump())
+        except pymongo.errors.DuplicateKeyError:
+            raise ResearchTaskAlreadyExists(f"A research task with title '{doc.title}' already exists.")
+        return result.inserted_id
 
 
 class ResearchTaskDoc(pydantic.BaseModel):

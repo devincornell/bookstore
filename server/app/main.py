@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 
 
-
+from app.api.deps import get_book_manager, get_db
 from app.db.mongodb import db_manager
 from app.mongo_models import BookManager
 from app.core.config import app_settings
@@ -28,6 +28,9 @@ async def lifespan(app: FastAPI):
         uri=app_settings.MONGODB_URL, 
         db_name=app_settings.MONGODB_DB_NAME
     )
+    book_manager = await get_book_manager(await get_db())
+    await book_manager.books.create_indexes()
+    await book_manager.tasks.create_indexes()
     yield
     # Shutdown: Logic from the manager
     await db_manager.close_mongo_connection()

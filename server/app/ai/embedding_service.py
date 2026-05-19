@@ -9,7 +9,7 @@ from .base_client_service import BaseClientService
 
 @dataclasses.dataclass
 class EmbeddingService(BaseClientService):
-    embedding_model: str = "text-embedding-004"  # Latest model with improved performance
+    embedding_model: str = "models/gemini-embedding-2-preview"  # Latest model with improved performance
 
     async def generate_embedding(
         self,
