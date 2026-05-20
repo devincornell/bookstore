@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 #from app.api.endpoints.books import router as books_router
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
@@ -79,7 +79,11 @@ def create_app() -> FastAPI:
     #    tags=["books"]
     #)
 
-    @app.get("/", response_class=HTMLResponse)
+    @app.get("/")
+    async def root_redirect():
+        return RedirectResponse(url="/bookstore")
+
+    @app.get("/bookstore", response_class=HTMLResponse)
     async def bookstore_frontend(request: Request):
         """Serve the bookstore frontend HTML page"""
         return templates.TemplateResponse("bookstore.html", {"request": request})
