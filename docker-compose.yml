@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: bookstore-app
     ports:
-      - "8000:8000"
+      - "8001:8000"
     env_file:
       - server/.env
     # All environment variables are loaded from server/.env file
