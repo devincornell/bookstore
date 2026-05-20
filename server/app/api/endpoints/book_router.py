@@ -31,7 +31,7 @@ from app.ai import (
     AIServices,
 )
 
-ai_services = AIServices.from_api_key(app_settings.GOOGLE_API_KEY)
+ai_services = AIServices.from_service_account()
 
 router = APIRouter()
 mcp_app = FastMCP('Test tools.', stateless_http = True)
@@ -42,7 +42,7 @@ async def books_recommend(
     recommend_criteria: Optional[str] = Query(None, description="Criteria for recommending books"),
     book_manager: BookManager = Depends(get_book_manager)
 ) -> BookRecommendOutput:
-    books = await book_manager.find_all()
+    books = await book_manager.books.find_all()
     return await ai_services.recommend.recommend_books(
         recommend_criteria=recommend_criteria,
         book_info=[br.research_output.info for br in books],
@@ -64,64 +64,64 @@ class BookWithSimilarityListResponse(BaseModel):
     books: list[BookResearchWithSimilarity] = pydantic.Field(description="List of researched books with similarity scores")
 
 @router.get("/search", response_model=BookWithSimilarityListResponse)
-async def books_list(
+async def search_books(
     q: str = Query(..., description="Text query to search for similar books"),
     top_n: int = Query(5, description="Number of top similar books to return"),
+    book_manager: BookManager = Depends(get_book_manager),
 ) -> BookWithSimilarityListResponse:
-    await init_beanie_models()
     query_vector = await ai_services.embedding.generate_embedding(q)
-    books = await BookResearch.vector_similarity(query_vector=query_vector, limit=top_n)
-    return BookWithSimilarityListResponse(
-        books=books
-    )
+    books = await book_manager.books.vector_similarity(query_vector=query_vector, limit=top_n)
+    return BookWithSimilarityListResponse(books=books)
 
 class BookListResponse(BaseModel):
     books: list[BookInfoResponse] = pydantic.Field(description="List of researched books")
 
 @router.get("/list", response_model=BookListResponse)
-async def books_list(
+async def list_books(
+    book_manager: BookManager = Depends(get_book_manager),
 ) -> BookListResponse:
-    await init_beanie_models()
-    books = await BookResearch.find_all().to_list()
-    return BookListResponse(
-        books=[BookInfoResponse.from_book_research(br) for br in books]
-    )
+    raw_docs = await book_manager.books._collection.find().to_list()
+    books = [
+        BookInfoResponse(id=str(doc["_id"]), info=BookDoc.model_validate(doc).research_output.info)
+        for doc in raw_docs
+    ]
+    return BookListResponse(books=books)
 
 @router.delete("/delete/{book_id}")
 async def books_delete(
-    book_id: str
+    book_id: str,
+    book_manager: BookManager = Depends(get_book_manager),
 ):
     """Delete a book by its MongoDB document ID."""
-    await init_beanie_models()
+    from bson import ObjectId
     try:
-        book = await BookResearch.get(book_id)
-        if not book:
+        result = await book_manager.books._collection.delete_one({"_id": ObjectId(book_id)})
+        if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Book not found")
-        await book.delete()
         return {"message": "Book deleted successfully", "deleted_id": book_id}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error deleting book: {str(e)}")
 
 @router.get("/clear")
 async def books_clear(
+    book_manager: BookManager = Depends(get_book_manager),
 ) -> bool:
-    await init_beanie_models()
-    await BookResearch.delete_all()
+    await book_manager.books._collection.delete_many({})
     return True
 
 
 @mcp_app.tool()
-async def search_books(
-    search_query: str = Query(..., description="Search query string"),
+async def search_books_mcp(
+    search_query: str,
 ) -> str:
-    '''OFFICIAL BOOKSTORE TOOL. Search bookstore based on any relevant information.
-    '''
+    '''OFFICIAL BOOKSTORE TOOL. Search bookstore based on any relevant information.'''
+    from app.db.mongodb import db_manager
     logging.log(logging.INFO, "Received search query: %s", search_query)
-
-    await init_beanie_models()
+    book_manager = BookManager.from_database(db_manager.db)
     query_vector = await ai_services.embedding.generate_embedding(search_query)
-    books = await BookResearch.vector_similarity(query_vector=query_vector, limit=5)
-
+    books = await book_manager.books.vector_similarity(query_vector=query_vector, limit=5)
     out = ''
     for i, book in enumerate(books):
         out += f'# Book Result: {i}\n\n{book.book.as_string()}\n\n\n\n'

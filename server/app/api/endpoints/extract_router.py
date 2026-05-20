@@ -32,9 +32,9 @@ from app.ai import (
     BookExtractionOutput,
 )
 
-research_service = BookResearchService.from_api_key(app_settings.GOOGLE_API_KEY)
-recommend_service = BookRecommendService.from_api_key(app_settings.GOOGLE_API_KEY)
-extraction_service = BookExtractionService.from_api_key(app_settings.GOOGLE_API_KEY)
+research_service = BookResearchService.from_service_account()
+recommend_service = BookRecommendService.from_service_account()
+extraction_service = BookExtractionService.from_service_account()
 
 
 router = APIRouter()

@@ -37,7 +37,7 @@ from app.ai import (
 
 from app.api.deps import get_book_manager, get_db
 
-ai_services = AIServices.from_api_key(app_settings.GOOGLE_API_KEY)
+ai_services = AIServices.from_service_account()
 
 
 router = APIRouter()
@@ -49,19 +49,22 @@ class SingleBookResearchRequest(BaseModel):
 class MultiBookResearchRequest(BaseModel):
     books: list[SingleBookResearchRequest] = Field(description="List of books to research")
 
-@router.post("/research_and_insert_async", response_model=list[ResearchTaskDoc])
+class SubmittedResponse(BaseModel):
+    submitted: int = Field(description="Number of research tasks submitted")
+
+@router.post("/research_and_insert_async", response_model=SubmittedResponse)
 async def research_book_async(
     request: MultiBookResearchRequest,
     background_tasks: BackgroundTasks,
     book_manager: BookManager = Depends(get_book_manager),
-) -> str:
+) -> SubmittedResponse:
     """Start asynchronous book research and return immediately with task ID"""
     for brq in request.books:
         background_tasks.add_task(
             background_task_research,
             research_request=brq,
         )
-    return 'Submitted!'
+    return SubmittedResponse(submitted=len(request.books))
 
 async def background_task_research(
     research_request: SingleBookResearchRequest,
@@ -169,7 +172,7 @@ async def research_task_get(
     book_manager: BookManager = Depends(get_book_manager),
 ) -> ResearchTaskDoc:
     try:
-        task = await book_manager.tasks.find_task_by_id(task_id)
+        _, task = await book_manager.tasks.find_task_by_id(task_id)
     except ResearchTaskDoesNotExist:
         raise HTTPException(status_code=404, detail="Research task not found")
     return task
@@ -179,28 +182,22 @@ async def research_task_get(
 async def research_tasks_list_working(
     book_manager: BookManager = Depends(get_book_manager),  
 ) -> ResearchTasks:
-    tasks = await book_manager.tasks.find_by_status(TaskStatus.WORKING).to_list()
-    return ResearchTasks(
-        tasks = tasks,
-    )
+    pairs = await book_manager.tasks.find_tasks_by_status(TaskStatus.WORKING)
+    return ResearchTasks(tasks=[doc for _, doc in pairs])
 
 @router.get("/tasks/list_failed", response_model=ResearchTasks)
 async def research_tasks_list_failed(
     book_manager: BookManager = Depends(get_book_manager),  
 ) -> ResearchTasks:
-    tasks = await book_manager.tasks.find_by_status(TaskStatus.FAILURE).to_list()
-    return ResearchTasks(
-        tasks = tasks,
-    )
+    pairs = await book_manager.tasks.find_tasks_by_status(TaskStatus.FAILURE)
+    return ResearchTasks(tasks=[doc for _, doc in pairs])
 
 @router.get("/tasks/list", response_model=ResearchTasks)
 async def research_tasks_list(
     book_manager: BookManager = Depends(get_book_manager),
 ) -> ResearchTasks:
-    tasks = await book_manager.tasks.find_all()
-    return ResearchTasks(
-        tasks = tasks,
-    )
+    pairs = await book_manager.tasks.find_all()
+    return ResearchTasks(tasks=[doc for _, doc in pairs])
 
 @router.get("/tasks/clear")
 async def research_tasks_clear(

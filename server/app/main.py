@@ -73,11 +73,11 @@ def create_app() -> FastAPI:
         tags=["research"]
     )
 
-    #app.include_router(
-    #    books_router,
-    #    prefix="/books",
-    #    tags=["books"]
-    #)
+    app.include_router(
+        books_router,
+        prefix="/books",
+        tags=["books"]
+    )
 
     @app.get("/")
     async def root_redirect():
@@ -86,7 +86,7 @@ def create_app() -> FastAPI:
     @app.get("/bookstore", response_class=HTMLResponse)
     async def bookstore_frontend(request: Request):
         """Serve the bookstore frontend HTML page"""
-        return templates.TemplateResponse("bookstore.html", {"request": request})
+        return templates.TemplateResponse(request=request, name="bookstore.html")
 
     @app.get("/health")
     async def health_check():

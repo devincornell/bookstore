@@ -148,12 +148,6 @@ class BookResearchService(BaseClientService):
         "{research_output}"
     )
 
-    @classmethod
-    def from_api_key(cls, api_key: str, **kwargs) -> BookResearchService:
-        """Create BookAIService instance from API key"""
-        client = genai.Client(api_key=api_key)
-        return cls(client=client, **kwargs)
-    
     async def research_book(self, title: str, other_info: str|None) -> BookResearchOutput:
         """Perform comprehensive research on a book and return structured info"""
         research_output, sources = await self._search_book_info(title=title, other_info=other_info)

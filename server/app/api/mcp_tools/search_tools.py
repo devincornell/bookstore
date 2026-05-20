@@ -32,7 +32,7 @@ from app.ai import (
 
 
 
-ai_services = AIServices.from_api_key(app_settings.GOOGLE_API_KEY)
+ai_services = AIServices.from_service_account()
 
 router = APIRouter()
 

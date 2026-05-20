@@ -2759,20 +2759,10 @@
                     throw new Error(errorData.detail || 'Failed to start research');
                 }
 
-                const tasks = await response.json();
-                console.log('Research tasks created:', tasks);
-                
-                // Add all tasks to active tasks
-                tasks.forEach(task => {
-                    const taskId = task._id || task.id;
-                    activeTasks.set(taskId, {
-                        taskId: taskId,
-                        title: task.title || `Research for book`,
-                        type: 'single'
-                    });
-                });
+                const result = await response.json();
+                console.log('Research tasks submitted:', result);
 
-                showTextStatus('success', `✅ Started research for ${books.length} books (${tasks.length} tasks created)`);
+                showTextStatus('success', `✅ Started research for ${result.submitted} books`);
 
                 // Start monitoring tasks
                 startTaskPolling();
@@ -2973,21 +2963,11 @@
                     throw new Error(errorData.detail || 'Failed to start bulk research');
                 }
 
-                const tasks = await response.json();
-                console.log('Bulk research tasks created:', tasks);
-                
-                // Add all tasks to active tasks
-                tasks.forEach(task => {
-                    const taskId = task._id || task.id;
-                    activeTasks.set(taskId, {
-                        taskId: taskId,
-                        title: task.title,
-                        type: 'single'
-                    });
-                });
+                const result = await response.json();
+                console.log('Bulk research tasks submitted:', result);
 
                 statusContainer.className = 'success';
-                statusContainer.innerHTML = `✅ Started research for ${extractedBooks.length} books (${tasks.length} tasks created)`;
+                statusContainer.innerHTML = `✅ Started research for ${result.submitted} books`;
 
                 // Start monitoring and clear extracted books after a delay
                 startTaskPolling();

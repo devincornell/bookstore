@@ -53,13 +53,12 @@ class BookCollection(CollectionBase):
                 }
             })
         
-    @classmethod
-    async def find_all(cls) -> list[BookDoc]:
+    async def find_all(self) -> list[BookDoc]:
         '''Retrieve all book documents from the collection.'''
-        return await cls._collection.find().to_list()
+        docs = await self._collection.find().to_list()
+        return [BookDoc.model_validate(doc) for doc in docs]
 
-    @classmethod
-    async def vector_similarity(cls, query_vector: List[float], limit: int = 5) -> list[BookResearchWithSimilarity]:
+    async def vector_similarity(self, query_vector: List[float], limit: int = 5) -> list[BookResearchWithSimilarity]:
         '''Perform a vector search query to find similar books based on the provided embedding vector.'''
         pipeline = [
             {
@@ -75,8 +74,9 @@ class BookCollection(CollectionBase):
                 "$project": BookResearchWithSimilarity.project()
             }
         ]
-        # The 'projection_model' makes this elegant by returning Pydantic objects
-        return await cls.aggregate(pipeline, projection_model=BookResearchWithSimilarity).to_list()
+        cursor = await self._collection.aggregate(pipeline)
+        docs = await cursor.to_list()
+        return [BookResearchWithSimilarity.model_validate(doc) for doc in docs]
     
     async def insert_book(self, 
         provided_title: str, 
@@ -113,7 +113,7 @@ class BookDoc(pydantic.BaseModel):
 
 
 class BookResearchWithSimilarity(pydantic.BaseModel):
-    book: BookDoc = pydantic.Field(description="The researched book document")
+    book: BookResearchInfo = pydantic.Field(description="The researched book information")
     similarity: float = pydantic.Field(description="Similarity score from vector search")
 
     @staticmethod

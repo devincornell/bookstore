@@ -7,6 +7,7 @@ from pydantic import Field, BaseModel
 import pydantic
 import pymongo
 import pymongo.errors
+from bson import ObjectId
 import asyncio
 import os
 import typing
@@ -52,9 +53,9 @@ class ResearchTaskCollection(CollectionBase):
         """Retrieve a research task by its title."""
         return await self.find_task({"title": title})
 
-    async def find_task_by_id(self, task_id: str) -> tuple[ResearchTaskID, ResearchTaskDoc]:
+    async def find_task_by_id(self, task_id) -> tuple[ResearchTaskID, ResearchTaskDoc]:
         """Retrieve a research task by its ID."""
-        return await self.find_task({"_id": task_id})
+        return await self.find_task({"_id": ObjectId(task_id)})
     
     async def find_task(self, filter: dict[str, Any]) -> tuple[ResearchTaskID, ResearchTaskDoc]:
         """Find a research task matching the given filter."""
@@ -65,7 +66,7 @@ class ResearchTaskCollection(CollectionBase):
 
     async def delete_task_by_id(self, task_id: ResearchTaskID) -> bool:
         """Delete a research task by its ID. Returns True if deleted, False if not found."""
-        result = await self._collection.delete_one({"_id": task_id})
+        result = await self._collection.delete_one({"_id": ObjectId(task_id)})
         return result.deleted_count > 0
     
     async def delete_all(self) -> int:
@@ -73,9 +74,9 @@ class ResearchTaskCollection(CollectionBase):
         result = await self._collection.delete_many({})
         return result.deleted_count
     
-    async def update_task_success(self, task_id: str) -> ResearchTaskDoc:
+    async def update_task_success(self, task_id: str, reason: str | None = None) -> ResearchTaskDoc:
         """Mark a research task as successful by its ID."""
-        return await self.update_task_status(task_id, TaskStatus.SUCCESS)
+        return await self.update_task_status(task_id, TaskStatus.SUCCESS, reason=reason)
     
     async def update_task_failure(self, task_id: str, reason: str) -> ResearchTaskDoc:
         """Mark a research task as failed by its ID, with an optional reason."""
@@ -89,17 +90,19 @@ class ResearchTaskCollection(CollectionBase):
         result = await self._collection.update_one({"title": title}, {"$set": update_data})
         if result.matched_count == 0:
             raise ResearchTaskDoesNotExist(f"Research task with title '{title}' does not exist.")
-        return await self.find_task_by_title(title)
+        _, doc = await self.find_task_by_title(title)
+        return doc
     
-    async def update_task_status(self, task_id: str, new_status: TaskStatus, reason: str|None = None) -> ResearchTaskDoc:
+    async def update_task_status(self, task_id, new_status: TaskStatus, reason: str|None = None) -> ResearchTaskDoc:
         """Update the status of a research task by its ID."""
         update_data = {"status": new_status}
         if reason is not None:
             update_data["reason"] = reason
-        result = await self._collection.update_one({"_id": task_id}, {"$set": update_data})
+        result = await self._collection.update_one({"_id": ObjectId(task_id)}, {"$set": update_data})
         if result.matched_count == 0:
             raise ResearchTaskDoesNotExist(f"Research task with ID {task_id} does not exist.")
-        return await self.find_task_by_id(task_id)
+        _, doc = await self.find_task_by_id(task_id)
+        return doc
 
     async def insert_new_research_task(
         self, 
@@ -123,7 +126,7 @@ class ResearchTaskCollection(CollectionBase):
         """Update existing record by title or insert a new one."""
         await self._collection.replace_one(
             filter={"title": doc.title},
-            replacement=doc.model_dump(), # Pydantic v2 dict conversion
+            replacement=doc.model_dump(exclude={'id'}),  # Pydantic v2 dict conversion
             upsert=True
         )
         inserted_doc = await self._collection.find_one({"title": doc.title}, {"_id": 1})
@@ -132,15 +135,23 @@ class ResearchTaskCollection(CollectionBase):
     async def insert_task(self, doc: ResearchTaskDoc) -> str:
         """Insert a new research task document into the collection."""
         try:
-            result = await self._collection.insert_one(doc.model_dump())
+            result = await self._collection.insert_one(doc.model_dump(exclude={'id'}))
         except pymongo.errors.DuplicateKeyError:
             raise ResearchTaskAlreadyExists(f"A research task with title '{doc.title}' already exists.")
-        return result.inserted_id
+        return str(result.inserted_id)
 
 
 class ResearchTaskDoc(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(populate_by_name=True)
+
+    id: str | None = Field(default=None, alias="_id")
     title: str = Field(description="Descriptive title for the research task")
     other_info: str|None = Field(default=None, description="Additional information about the task")
     status: TaskStatus = Field(default=TaskStatus.WORKING, description="Current status of the research task")
     started_at: datetime = Field(default_factory=datetime.now, description="Task creation timestamp")
     reason: str|None = Field(default=None, description="Reason for failure, if applicable")
+
+    @pydantic.field_validator('id', mode='before')
+    @classmethod
+    def coerce_id(cls, v):
+        return str(v) if v is not None else None

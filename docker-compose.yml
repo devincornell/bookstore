@@ -9,8 +9,14 @@ services:
       - "8001:8000"
     env_file:
       - server/.env
-    # All environment variables are loaded from server/.env file
-    # No need to override them here since they're properly configured there
+    environment:
+      # Service account credentials path for ADC
+      GOOGLE_APPLICATION_CREDENTIALS: /app/creds/personal-data-269621-e25f6357800e.json
+      # Vertex AI configuration (service accounts require Vertex AI, not the Developer API)
+      GOOGLE_CLOUD_PROJECT: personal-data-269621
+      GOOGLE_CLOUD_LOCATION: us-central1
+      # Unset the blocked API key so genai.Client doesn't auto-detect it
+      GOOGLE_API_KEY: ""
     volumes:
       # Mount Google Cloud credentials
       - ${GOOGLE_APPLICATION_CREDENTIALS:-./creds}:/app/creds:ro
